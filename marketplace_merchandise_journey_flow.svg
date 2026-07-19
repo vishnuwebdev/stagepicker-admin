@@ -1,0 +1,180 @@
+<svg viewBox="0 0 940 1440" xmlns="http://www.w3.org/2000/svg" role="img" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <title>Marketplace Merchandise Journey — Phase 1</title>
+  <desc>Flow diagram showing Admin creating and publishing merchandise catalog data, and both Auditioners and Producers shopping identically as Consumers, through browse, cart, checkout, payment, fulfillment and review. A footer notes Phase 2 (Classes, Webinars, Seminars) will follow the same pattern.</desc>
+
+  <defs>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="1440" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="470" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">Marketplace — Merchandise Journey (Phase 1)</text>
+  <text x="470" y="50" text-anchor="middle" font-size="12.5" fill="#64748b">Admin owns the entire catalog · Auditioners and Producers both shop as ordinary Consumers</text>
+
+  <!-- Legend -->
+  <g font-size="11.5" fill="#64748b">
+    <rect x="230" y="66" width="12" height="12" rx="3" fill="none" stroke="#b45309" stroke-width="2"/>
+    <text x="248" y="76">Admin (catalog owner)</text>
+    <rect x="410" y="66" width="12" height="12" rx="3" fill="none" stroke="#64748b" stroke-width="2"/>
+    <text x="428" y="76">Backend / Payment</text>
+    <rect x="580" y="66" width="12" height="12" rx="3" fill="none" stroke="#1d4ed8" stroke-width="2"/>
+    <text x="598" y="76">Consumer — Auditioner + Producer</text>
+  </g>
+
+  <!-- Lane headers -->
+  <text x="165" y="130" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="0.5" fill="#b45309">ADMIN</text>
+  <text x="440" y="130" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="0.5" fill="#64748b">BACKEND / PAYMENT</text>
+  <text x="715" y="130" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="0.5" fill="#1d4ed8">CONSUMER (shared)</text>
+
+  <!-- ===== Vertical connectors ===== -->
+  <g stroke="#64748b" stroke-width="1.6" fill="none" marker-end="url(#arrowGray)">
+    <path d="M165,204 L165,260"/>
+    <path d="M440,204 L440,260"/>
+    <path d="M715,324 L715,380"/>
+    <path d="M715,444 L715,500"/>
+    <path d="M715,564 L715,620"/>
+    <path d="M715,684 L715,740"/>
+    <path d="M715,804 L715,860"/>
+    <path d="M715,1044 L715,1100"/>
+    <path d="M715,1164 L715,1220"/>
+    <path d="M165,1044 L165,1100"/>
+    <path d="M165,1164 L165,1220"/>
+  </g>
+
+  <!-- Cross-lane sync arrows -->
+  <g stroke="#64748b" stroke-width="1.6" fill="none" marker-end="url(#arrowGray)">
+    <path d="M550,292 L590,292"/>
+    <path d="M330,1012 L290,1012"/>
+    <path d="M550,1012 L590,1012"/>
+    <path d="M290,1132 L330,1132"/>
+    <path d="M550,1132 L590,1132"/>
+    <path d="M590,892 L552,904"/>
+  </g>
+  <text x="570" y="284" font-size="9.5" fill="#64748b">sync</text>
+  <text x="305" y="1004" text-anchor="middle" font-size="9.5" fill="#64748b">new order</text>
+  <text x="573" y="1004" text-anchor="middle" font-size="9.5" fill="#64748b">confirmed</text>
+  <text x="305" y="1124" text-anchor="middle" font-size="9.5" fill="#64748b">shipped</text>
+  <text x="573" y="1124" text-anchor="middle" font-size="9.5" fill="#64748b">status</text>
+
+  <!-- Long notification arrow: Mark Delivered -> Rate & Review -->
+  <path d="M290,1252 L590,1252" stroke="#64748b" stroke-width="1.4" stroke-dasharray="5 4" fill="none" marker-end="url(#arrowGray)"/>
+  <text x="440" y="1244" text-anchor="middle" font-size="9.5" fill="#64748b">delivered notice</text>
+
+  <!-- Decision branches -->
+  <path d="M440,960 L440,980" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arrowGreen)"/>
+  <text x="450" y="974" font-size="10" fill="#16a34a" font-weight="600">approved</text>
+
+  <path d="M440,850 C440,758 715,758 715,860" stroke="#dc2626" stroke-width="1.8" fill="none" marker-end="url(#arrowRed)"/>
+  <text x="577" y="750" text-anchor="middle" font-size="10" fill="#dc2626" font-weight="600">declined — retry</text>
+
+  <!-- ===== Boxes ===== -->
+
+  <!-- A1 -->
+  <rect x="40" y="140" width="250" height="64" rx="10" fill="#f8fafc" stroke="#b45309" stroke-width="1.6"/>
+  <text x="165" y="164" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Create Merchandise Listing</text>
+  <text x="165" y="180" text-anchor="middle" font-size="10.5" fill="#64748b">title, price, images, variants</text>
+
+  <!-- S1 -->
+  <rect x="330" y="140" width="220" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/>
+  <text x="440" y="164" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Catalog Database</text>
+  <text x="440" y="180" text-anchor="middle" font-size="10.5" fill="#64748b">status: draft</text>
+
+  <!-- A2 -->
+  <rect x="40" y="260" width="250" height="64" rx="10" fill="#f8fafc" stroke="#b45309" stroke-width="1.6"/>
+  <text x="165" y="284" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Publish &amp; Set Stock</text>
+  <text x="165" y="300" text-anchor="middle" font-size="10.5" fill="#64748b">status: draft → live</text>
+
+  <!-- S2 -->
+  <rect x="330" y="260" width="220" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/>
+  <text x="440" y="284" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Catalog API</text>
+  <text x="440" y="300" text-anchor="middle" font-size="10.5" fill="#64748b">GET /merchandise</text>
+
+  <!-- C1 -->
+  <rect x="590" y="260" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="284" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Browse Merchandise</text>
+  <text x="715" y="300" text-anchor="middle" font-size="10.5" fill="#64748b">Home → Category tab</text>
+
+  <!-- C2 -->
+  <rect x="590" y="380" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="404" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Search &amp; Filter</text>
+  <text x="715" y="420" text-anchor="middle" font-size="10.5" fill="#64748b">price range, availability</text>
+
+  <!-- C3 -->
+  <rect x="590" y="500" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="524" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Product Detail</text>
+  <text x="715" y="540" text-anchor="middle" font-size="10.5" fill="#64748b">gallery, size, qty, stock</text>
+
+  <!-- C4 -->
+  <rect x="590" y="620" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="644" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Add to Cart</text>
+  <text x="715" y="660" text-anchor="middle" font-size="10.5" fill="#64748b">persistent multi-item cart</text>
+
+  <!-- C5 -->
+  <rect x="590" y="740" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="764" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Checkout</text>
+  <text x="715" y="780" text-anchor="middle" font-size="10.5" fill="#64748b">shipping &amp; billing address</text>
+
+  <!-- C6 -->
+  <rect x="590" y="860" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="884" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Enter Payment Details</text>
+  <text x="715" y="900" text-anchor="middle" font-size="10.5" fill="#64748b">card / Apple Pay / Google Pay</text>
+
+  <!-- S3 decision diamond -->
+  <polygon points="440,850 550,905 440,960 330,905" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/>
+  <text x="440" y="900" text-anchor="middle" font-size="11" font-weight="600" fill="#0f172a">Payment</text>
+  <text x="440" y="913" text-anchor="middle" font-size="11" font-weight="600" fill="#0f172a">approved?</text>
+
+  <!-- S4 -->
+  <rect x="330" y="980" width="220" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/>
+  <text x="440" y="1004" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Order Service</text>
+  <text x="440" y="1020" text-anchor="middle" font-size="10.5" fill="#64748b">creates order · status: Paid</text>
+
+  <!-- A3 -->
+  <rect x="40" y="980" width="250" height="64" rx="10" fill="#f8fafc" stroke="#b45309" stroke-width="1.6"/>
+  <text x="165" y="1004" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">New Order Alert</text>
+  <text x="165" y="1020" text-anchor="middle" font-size="10.5" fill="#64748b">order queue</text>
+
+  <!-- C7 -->
+  <rect x="590" y="980" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="1004" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Order Confirmation</text>
+  <text x="715" y="1020" text-anchor="middle" font-size="10.5" fill="#64748b">real order ID + receipt</text>
+
+  <!-- A4 -->
+  <rect x="40" y="1100" width="250" height="64" rx="10" fill="#f8fafc" stroke="#b45309" stroke-width="1.6"/>
+  <text x="165" y="1124" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Fulfill Order</text>
+  <text x="165" y="1140" text-anchor="middle" font-size="10.5" fill="#64748b">pack → ship → tracking #</text>
+
+  <!-- S5 -->
+  <rect x="330" y="1100" width="220" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/>
+  <text x="440" y="1124" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Status Sync</text>
+  <text x="440" y="1140" text-anchor="middle" font-size="10.5" fill="#64748b">shipped → delivered</text>
+
+  <!-- C8 -->
+  <rect x="590" y="1100" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="1124" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Track Order</text>
+  <text x="715" y="1140" text-anchor="middle" font-size="10.5" fill="#64748b">Purchase History screen</text>
+
+  <!-- A5 -->
+  <rect x="40" y="1220" width="250" height="64" rx="10" fill="#f8fafc" stroke="#b45309" stroke-width="1.6"/>
+  <text x="165" y="1244" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Mark Delivered</text>
+  <text x="165" y="1260" text-anchor="middle" font-size="10.5" fill="#64748b">closes fulfillment loop</text>
+
+  <!-- C9 -->
+  <rect x="590" y="1220" width="250" height="64" rx="10" fill="#f8fafc" stroke="#1d4ed8" stroke-width="1.6"/>
+  <text x="715" y="1244" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Rate &amp; Review / Return</text>
+  <text x="715" y="1260" text-anchor="middle" font-size="10.5" fill="#64748b">optional post-purchase action</text>
+
+  <!-- Footer: Phase 2 roadmap -->
+  <rect x="40" y="1340" width="860" height="60" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="6 4"/>
+  <text x="470" y="1364" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">Phase 2 (next, after Merchandise ships)</text>
+  <text x="470" y="1382" text-anchor="middle" font-size="11" fill="#64748b">Classes → Webinars → Seminars — same admin-catalog + shared-consumer pattern; enroll / register / book replaces cart → ship</text>
+</svg>

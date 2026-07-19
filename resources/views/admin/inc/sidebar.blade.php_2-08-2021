@@ -1,0 +1,114 @@
+
+    <!--  BEGIN SIDEBAR  -->
+    <div class="sidebar-wrapper sidebar-theme">
+            
+        <nav id="sidebar">
+            <div class="shadow-bottom"></div>
+
+            <ul class="list-unstyled menu-categories" id="accordionExample">
+                    <li class="menu {{ Request::segment(2) === 'dashboard' ? 'active' : null }}">
+                        <a href="{{ url('admin/dashboard') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-tachometer" aria-hidden="true"></i>
+                                 <span>Dashboard</span> 
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu">
+                        <a href="{{ url('admin/subscription') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-credit-card nav-icon"></i>
+                                <span>Subscription Plan</span>  
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu {{ Request::segment(2) === 'company-verification' ? 'active' : null }}">
+                        <a href="{{ url('admin/company-verification') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-cogs" aria-hidden="true"></i>
+                                 <span>Verification Request</span>
+                            </div>
+                        </a>
+                    </li>
+                    
+                    <li class="menu {{ Request::segment(2) === 'users' ? 'active' : null }}">
+                        <a href="{{ url('admin/users') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-users" aria-hidden="true"></i>
+                                 <span>User Management</span>
+                            </div>
+                        </a>
+                    </li>
+                    
+                    
+                    <li class="menu {{ Request::segment(2) === 'contactlist' ? 'active' : null }}">
+                        <a href="{{ url('admin/contactlist') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-clone" aria-hidden="true"></i>
+                                 <span>Contact Request</span>
+                            </div>
+                        </a>
+                    </li>
+                    
+                    <li class="menu {{ Request::segment(2) === 'category' ? 'active' : null }}">
+                        <a href="{{ url('admin/category') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-clone" aria-hidden="true"></i>
+                                <span>Category Management</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu {{ Request::segment(2) === 'skill' ? 'active' : null }}">
+                        <a href="{{ url('admin/skill') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-cogs" aria-hidden="true"></i>
+                                 <span>Skill Management</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu {{ Request::segment(2) === 'role' ? 'active' : null }}">
+                        <a href="{{ url('admin/role') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-cogs" aria-hidden="true"></i>
+                                 <span>Role Management</span>
+                            </div>
+                        </a>
+                    </li>
+					<li class="menu {{ Request::segment(2) === 'roletype' ? 'active' : null }}">
+                        <a href="{{ url('admin/roletype') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-cogs" aria-hidden="true"></i>
+                                 <span>Role Type Management</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu {{ Request::segment(2) === 'postaudition' ? 'active' : null }}">
+                        <a href="{{ url('admin/postaudition') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                               <i class="fa fa-video-camera" aria-hidden="true"></i>
+                                <span>Audition Management</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu {{ Request::segment(2) === 'cms' ? 'active' : null }}">
+                        <a href="{{ url('admin/cms') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                                <i class="fa fa-file-text" aria-hidden="true"></i>
+                                 <span>CMS</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="menu {{ Request::segment(2) === 'slider' ? 'active' : null }}">
+                        <a href="{{ url('admin/slider') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+                            <div class="">
+                               <i class="fa fa-picture-o" aria-hidden="true"></i>
+                                <span>Slider Management</span>
+                            </div>
+                        </a>
+                    </li>
+            </ul>
+            
+        </nav>
+
+    </div>
+    <!--  END SIDEBAR  -->

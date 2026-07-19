@@ -1,0 +1,249 @@
+<?php
+namespace App\Http\Controllers\Admin;
+
+use DB;
+use App\Models\Category;
+use App\Models\Postaudition;
+use App\Models\Role;
+use App\Http\Controllers\AdminController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Carbon\CarbonInterval;
+use \Session;
+use App\Lib\Uploader;
+//use Illuminate\Mail\Mailer;
+class PostauditionController extends AdminController
+{
+
+    public function list(Request $request)
+    {
+        $postaudition = DB::table('post_auditions')
+            ->leftJoin('categories', 'post_auditions.category', '=', 'categories.id')
+            ->join('users', 'post_auditions.user_id', '=', 'users.id')
+            ->select('post_auditions.*', 'categories.category_name', 'users.name')
+            ->orderBy('id', 'DESC')
+            ->get();
+        return \View::make("admin/audition/list", compact('postaudition'));
+    }
+
+    public function detailbackup(Request $request,$id=null) {
+        $detail = "";    
+            $id =  base64_decode($id);
+            if(!empty($id)){
+				$detail = DB::table('post_auditions')
+				->leftJoin('categories', 'post_auditions.category', '=', 'categories.id')
+				->leftjoin("roles",\DB::raw("FIND_IN_SET(roles.id,post_auditions.roles)"),">",\DB::raw("'0'"))
+				->select('post_auditions.*', 'categories.category_name',
+					DB::raw("GROUP_CONCAT(roles.role_title) as roles")
+				)
+				->where('post_auditions.id', $id)
+				->first();
+				
+			
+				$participants = DB::table('post_audition_participants')
+				->join('users', 'post_audition_participants.user_id', '=', 'users.id')
+				->leftJoin('roles', 'post_audition_participants.role_id', '=', 'roles.id')
+				->select('post_audition_participants.*', 'users.*', 'roles.role_title')
+				->where('post_audition_id', $id)
+				->get();
+				
+				$photos = DB::table('post_auditions_photographies') 
+					->select('post_auditions_photographies.*')
+					->where('post_auditions_photographies.post_auditions_id', $id)
+					->get();
+				
+				
+				$roles = $detail->roles;
+				$allroles = explode(',',$roles);
+				$rolesData = array();
+				
+				/* if(!empty($allroles)){
+					foreach($allroles as $rol){
+						$rol = trim($rol);
+						if(is_numeric($rol)){
+							$resrole = Role::where("id", $rol)->first();
+							if(!empty($resrole)){
+								$rolesData[] = $resrole;   
+							}
+						}else{
+							$resrole = Role::where("role_title", $rol)->first();
+							if(!empty($resrole)){
+								$rolesData[] = $resrole; 
+							}
+						}
+					}
+				} */ 
+                
+            }
+			 
+			
+         return \View::make('admin/audition/detail',compact('detail', 'participants','rolesData','photos'));
+    }
+    
+    public function detail(Request $request,$id=null) {
+        $detail = "";    
+            $id =  base64_decode($id);
+            if(!empty($id)){
+				
+				$postauditionval = DB::table('post_auditions')
+					->leftJoin('categories', 'post_auditions.category', '=', 'categories.id')
+					->select('post_auditions.*', 'categories.category_name')
+					->where('post_auditions.id', $id)
+					->first();
+				//dd($postauditionval);
+				 
+				$detail = array();
+				
+				$audition_type = $postauditionval->audition_type;
+				
+				$rolesData = array();
+				$participants = array();
+				$photos = array();
+
+				if($audition_type == '2'){
+					$participants = DB::table('post_audition_participants')
+						->join('users', 'post_audition_participants.user_id', '=', 'users.id') 
+						->select('post_audition_participants.*', 'users.*')
+						->where('post_audition_id', $id)
+						->get(); 
+						
+					$photos = DB::table('post_auditions_photographies') 
+					->select('post_auditions_photographies.*')
+					->where('post_auditions_photographies.post_auditions_id', $id)
+					->get();
+				}else{
+					$roles = $postauditionval->roles;
+				 
+					$allroles = explode(',',$roles);
+					 
+					if(!empty($allroles)){
+						foreach($allroles as $rol){
+							$rol = trim($rol);
+							if(is_numeric($rol)){
+								$resrole = Role::where("roles.id", $rol)
+								->leftJoin('role_types', 'roles.role_type', '=', 'role_types.id')
+								->select('roles.*','role_types.title as role_type')
+								->first();
+								if(!empty($resrole)){ 
+									// get all participants applied to this audition and role
+									
+									$participantData = DB::table('post_audition_participants') 
+										->leftJoin('users', 'post_audition_participants.user_id', '=', 'users.id') 
+										->select('users.*')
+										->where('post_audition_participants.role_id', $resrole->id)
+										->where('post_audition_participants.post_audition_id', $postauditionval->id) 
+										->get();
+										
+									$resrole->participants = $participantData; 
+									
+									$rolesData[] = $resrole;
+										
+								}
+							}else{
+								$resrole = Role::where("roles.role_title", $rol)
+								->leftJoin('role_types', 'roles.role_type', '=', 'role_types.id')
+								->select('roles.*','role_types.title as role_type')
+								->first();
+								if(!empty($resrole)){
+									 
+									// get all participants applied to this audition and role
+									
+									$participantData = DB::table('post_audition_participants') 
+										->leftJoin('users', 'post_audition_participants.user_id', '=', 'users.id') 
+										->select('users.name', 'users.image','users.age','users.height','users.email','users.phone','users.pro_member','users.status')
+										->where('post_audition_participants.role_id', $resrole->id)
+										->where('post_audition_participants.post_audition_id', $postauditionval->id) 
+										->get();
+										 
+									$resrole->participants = $participantData; 
+									
+									$rolesData[] = $resrole;
+								}
+							}
+						}
+					}
+				}
+				 
+				$detail = array 
+				(
+					  "id"=> $postauditionval->id,  
+					  "user_id"=> $postauditionval->user_id,  
+					  "audition_title"=> $postauditionval->audition_title,  
+					  "category"=> $postauditionval->category,  
+					  "expire_date"=> $postauditionval->expire_date,
+					  "gender"=> $postauditionval->gender,  
+					  "union_type"=> $postauditionval->union_type,
+					  "audition_type"=> $postauditionval->audition_type,
+					  "age_group"=> $postauditionval->age_group,  
+					  "location"=> $postauditionval->location,  
+					  "photography_type"=> $postauditionval->photography_type,  
+					  "photography_image"=> $postauditionval->photography_image,  
+					  "production_description"=> $postauditionval->production_description,  
+					  "skills"=> $postauditionval->skills,  
+					  "status"=> $postauditionval->status,  
+					  "category_name"=> $postauditionval->category_name, 
+					  "studio_name"=> $postauditionval->studio_name,
+					  "compensation"=> $postauditionval->compensation,
+					  "compensation_description"=> $postauditionval->compensation_description,
+					  "production_website"=> $postauditionval->production_website, 
+					  "audition_location"=> $postauditionval->audition_location, 
+					  "roles"=> $rolesData, 				  
+					  "participants"=> $participants 				  
+				); 
+				
+				$detail = (object)$detail;
+            }
+		//dd($detail);	 
+			
+		return \View::make('admin/audition/detail',compact('detail', 'participants','photos'));
+		
+    }
+    
+    
+    public function delete($id)
+    {
+        try
+        {
+            Category::where('id', '=', $id)->delete();
+            return redirect("admin/category")
+                ->with('success', "Category deleted successfully")
+                ->send();
+        }
+        catch(\Exception $e)
+        {
+
+            return redirect("admin/category")->with('error', "Please try again")
+                ->send();
+
+        }
+
+    }
+	
+	 
+    public function auditionPostAudition(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'post_aud_id'  => 'required', 
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+			return response()->json(['errors'=>$validator->errors()]);
+        } else {
+            $audition = Postaudition::find($data['post_aud_id']);
+            $audition->pin_to_top = $data['pin_to_top']; 
+ 
+            $audition->save();
+            
+			return response()->json(['success' => true], 200);
+        }
+
+    }
+   
+    
+
+}
+

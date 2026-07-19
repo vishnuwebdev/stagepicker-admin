@@ -1,0 +1,1213 @@
+<?php
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\ApiController;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Category;
+use App\Models\Auditionparticipant;
+use App\Models\Skill;
+use App\Models\Role;
+use App\Models\Postaudition;
+use App\Models\Portfolio;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
+use \Session;
+use Socialite;
+use App\Models\Mail as Mail;
+use Illuminate\Support\Facades\Auth;
+use App\FireStore\FireStoreApiClient;
+use App\FireStore\FireStoreDocument;
+use DB;
+class PostauditionController extends ApiController
+{
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    protected $Request;
+    protected $User;
+
+    public function __construct(Request $request, User $user)
+    {
+        parent::__construct();
+        // Store All Type Request
+        $this->Request = $request;
+        $this->User = $user;
+    }
+
+    function response($data)
+    {
+        //return response()->json($this->arrayHandleFun($data),200);
+        $data = $this->arrayHandleFun($data);
+        // This header pass for allow origin control.
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Origin: http://demo2server.com/petjournal/api");
+        header('Access-Control-Allow-Methods: GET,HEAD,OPTIONS,POST,PUT');
+        header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization, X-CSRF-Token');
+        header('Access-Control-Allow-Credentials: true');
+        echo json_encode($data);
+        die();
+    }
+
+    function validationHandle($validation)
+    {
+        foreach ($validation->getMessages() as $field_name => $messages)
+        {
+            if (!isset($firstError))
+            {
+                $firstError = $messages[0];
+                $error[$field_name] = $messages[0];
+            }
+        }
+        return $firstError;
+    }
+
+    function arrayHandleFun($array, $isRepeat = false)
+    {
+
+        foreach ($array as $key => $value)
+        {
+            if ($value === null)
+            {
+                $array[$key] = "";
+            }
+            else if (is_array($value))
+            {
+                if (empty($value))
+                {
+                    //$array[$key] = "";
+                    
+                }
+                else
+                {
+                    $array[$key] = SELF::arrayHandleFun($value);
+                }
+            }
+        }
+        if (!$isRepeat)
+        {
+            $array = SELF::arrayHandleFun($array, true);
+        }
+        return $array;
+    }
+    
+    public function searchData(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $skills = Skill::orderBy('id', 'DESC')->get();
+            $role = Role::orderBy('id', 'DESC')->get();
+            $category = Category::orderBy('id', 'DESC')->get();
+            $response['status']   = "true"; 
+            $response['message']  = "Search Data";
+            $response['data']['role'] = $role;
+            $response['data']['skills'] = $skills;
+            $response['data']['category'] = $category;
+            return response()->json($response);
+        }
+    }
+    
+    public function dashboardData(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $postaudition = DB::table('post_auditions')
+            ->join('categories', 'post_auditions.category', '=', 'categories.id')
+            ->select('post_auditions.*', 'categories.category_name',
+			 DB::raw("GROUP_CONCAT(roles.role_title) as roles")
+			)
+			->leftjoin("roles",\DB::raw("FIND_IN_SET(roles.id,post_auditions.roles)"),">",\DB::raw("'0'"))
+            ->where('post_auditions.status', '1')
+            ->orderBy('post_auditions.id', 'DESC')
+            ->groupBy("post_auditions.id")
+            ->limit(5)
+            ->get();
+			
+			 
+            $postauditiondata = array();
+            foreach($postaudition as $postauditionval){
+                
+                
+                $applied = Auditionparticipant::where("post_audition_id", $postauditionval->id)->where("user_id", $data['user_id'])->first();
+                $checkapply = false;
+                if(!empty($applied)){
+                    $checkapply = true;
+                }
+                $promember = DB::table('users')->select('pro_member')
+                ->where('id', $postauditionval->user_id)
+                ->where('pro_member', '1')
+                ->first();
+                $checkpromember = false;
+                if(!empty($promember)){
+                    $checkpromember = true;
+                }
+                
+                $postauditiondata[] = array 
+    			(
+    			  "id"=> $postauditionval->id,  
+    			  "user_id"=> $postauditionval->user_id,  
+    			  "audition_title"=> $postauditionval->audition_title,  
+    			  "category"=> $postauditionval->category,  
+    			  "expire_date"=> $postauditionval->expire_date,
+    			  "gender"=> $postauditionval->gender, 
+    			  "roles"=> $postauditionval->roles,
+    			  "union_type"=> $postauditionval->union_type,
+    			  "audition_type"=> $postauditionval->audition_type,
+    			  "age_group"=> $postauditionval->age_group,  
+    			  "location"=> $postauditionval->location,  
+    			  "photography_type"=> $postauditionval->photography_type,  
+    			  "photography_image"=> $postauditionval->photography_image,  
+    			  "production_description"=> $postauditionval->production_description,  
+    			  "skills"=> $postauditionval->skills,  
+    			  "status"=> $postauditionval->status,  
+    			  "category_name"=> $postauditionval->category_name,
+    			  "applied"=> $checkapply,
+    			  "pro_member"=> $checkpromember
+    			  
+    			  
+                );
+                
+            }
+            
+                $response['status'] = "true";
+                $response['message'] = "Post Audition List";
+                $response['data'] = $postauditiondata;
+                return response()->json($response);
+        }
+    }
+    public function list(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+          
+			$postaudition = DB::table('post_auditions')
+            ->join('categories', 'post_auditions.category', '=', 'categories.id')
+            ->select('post_auditions.*', 'categories.category_name',
+			 DB::raw("GROUP_CONCAT(roles.role_title) as roles")
+			)
+			->leftjoin("roles",\DB::raw("FIND_IN_SET(roles.id,post_auditions.roles)"),">",\DB::raw("'0'"))
+            ->where('post_auditions.user_id', $data['user_id'])
+            ->where('post_auditions.status', '1')
+            ->where('post_auditions.audition_type', '1')
+            ->orderBy('post_auditions.id', 'DESC')
+            ->groupBy("post_auditions.id")
+            ->limit(5)
+            ->get();
+            
+			$response['status'] = "true";
+			$response['message'] = "Post Audition List";
+			$response['data'] = $postaudition;
+			return response()->json($response);
+        }
+    }
+    
+    public function auditionfeedlist(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+             'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $sql = "SELECT post_auditions.*,categories.category_name FROM post_auditions INNER JOIN categories ON post_auditions.category=categories.id WHERE status = '1' AND audition_type = '1'";
+            $where = '';
+            if(!empty($data['skills'])){ 
+                $skills = $data['skills'];
+            $where .= " AND skills REGEXP CONCAT('(^|,)(', REPLACE('$skills', ',', '|'), ')(,|$)')";
+            }
+            
+            if(!empty($data['location'])){ 
+                $location = $data['location'];
+            $where .= " AND location = '$location'";
+            }
+            if(!empty($data['gender'])){ 
+                $gender = $data['gender'];
+            $where .= " AND gender = '$gender'";
+            }
+            if(!empty($data['category'])){ 
+                $category = $data['category'];
+            $where .= " AND category = '$category'";
+            }
+            if(!empty($data['role'])){ 
+                $role = $data['role'];
+            $where .= " AND roles = '$role'";
+            }
+            if(!empty($data['union_type'])){ 
+                $union_type = $data['union_type'];
+            $where .= " AND union_type = '$union_type'";
+            }
+            if(!empty($data['age_group'])){ 
+                $age_group = $data['age_group'];
+            $where .= " AND age_group = '$age_group'";
+            }
+            
+            $completequery = $sql." ".$where;
+            
+            $postaudition =   DB::select("$completequery");
+            
+            $postauditiondata = array();
+            foreach($postaudition as $postauditionval){
+                
+                
+                $applied = Auditionparticipant::where("post_audition_id", $postauditionval->id)->where("user_id", $data['user_id'])->first();
+                $checkapply = false;
+                if(!empty($applied)){
+                    $checkapply = true;
+                }
+                $promember = DB::table('users')->select('pro_member')
+                ->where('id', $postauditionval->user_id)
+                ->where('pro_member', '1')
+                ->first();
+                $checkpromember = false;
+                if(!empty($promember)){
+                    $checkpromember = true;
+                }
+                
+                $postauditiondata[] = array 
+    			(
+    			  "id"=> $postauditionval->id,  
+    			  "user_id"=> $postauditionval->user_id,  
+    			  "audition_title"=> $postauditionval->audition_title,  
+    			  "category"=> $postauditionval->category,  
+    			  "expire_date"=> $postauditionval->expire_date,
+    			  "gender"=> $postauditionval->gender, 
+    			  "roles"=> $postauditionval->roles,
+    			  "union_type"=> $postauditionval->union_type,
+    			  "age_group"=> $postauditionval->age_group,  
+    			  "location"=> $postauditionval->location,  
+    			  "production_description"=> $postauditionval->production_description,  
+    			  "skills"=> $postauditionval->skills,  
+    			  "status"=> $postauditionval->status,  
+    			  "category_name"=> $postauditionval->category_name,
+    			  "applied"=> $checkapply,
+    			  "pro_member"=> $checkpromember
+    			  
+                );
+                
+            }
+            
+                $response['status'] = "true";
+                $response['message'] = "Search Result";
+                $response['data'] = $postauditiondata;
+                return response()->json($response);
+        }
+    }
+    public function auditionfeedlistbackup(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $users = User::find($data['user_id']);
+            $userskill = $users['skills'];
+            //$postaudition =   DB::select("SELECT post_auditions.*,categories.category_name FROM post_auditions INNER JOIN categories ON post_auditions.category=categories.id WHERE skills REGEXP CONCAT('(^|,)(', REPLACE('$userskill', ',', '|'), ')(,|$)') AND status = '1'");
+            
+            
+            $postaudition =   DB::select("SELECT post_auditions.*,categories.category_name FROM post_auditions INNER JOIN categories ON post_auditions.category=categories.id WHERE status = '1'");
+            
+            $postauditiondata = array();
+            
+            foreach($postaudition as $postauditionval){
+                
+                
+                
+                $checkapply = false;
+                $applied = Auditionparticipant::where("post_audition_id", $postauditionval->id)->where("user_id", $data['user_id'])->first();
+                
+                if(!empty($applied)){
+                    $checkapply = true;
+                }
+                
+                $postauditiondata[] = array
+    			(
+    			  "id"=> $postauditionval->id,  
+    			  "user_id"=> $postauditionval->user_id,  
+    			  "audition_title"=> $postauditionval->audition_title,  
+    			  "category"=> $postauditionval->category,  
+    			  "expire_date"=> $postauditionval->expire_date,  
+    			  "roles"=> $postauditionval->roles,  
+    			  "age_group"=> $postauditionval->age_group,  
+    			  "location"=> $postauditionval->location,  
+    			  "production_description"=> $postauditionval->production_description,  
+    			  "skills"=> $postauditionval->skills,  
+    			  "status"=> $postauditionval->status,  
+    			  "category_name"=> $postauditionval->category_name,
+    			  "applied"=> $checkapply
+    			  
+                );
+            $postaudition['applied'] = 'true';
+                
+            } 
+            
+                $response['status'] = "true";
+                $response['message'] = "Audition feed List";
+                $response['data'] = $postauditiondata;
+                return response()->json($response);
+        }
+    }
+    public function actormodelfeed(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $auditioner = User::where('user_type','1')->where('status','1')->get();
+           
+                $response['status'] = "true";
+                $response['message'] = "Actor Model List";
+                $response['data'] = $auditioner;
+                return response()->json($response);
+        }
+    }
+    public function addPostauditionData(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $category = Category::orderBy('id', 'DESC')->get();
+            $role = Role::orderBy('id', 'DESC')->get();
+            $skills = Skill::orderBy('id', 'DESC')->get();
+            $response['status']   = "true"; 
+            $response['message']  = "Post Audition Data";
+            $response['data']['role'] = $role;
+            $response['data']['category'] = $category;
+            $response['data']['skills'] = $skills;
+            return response()->json($response);
+        }
+    }
+    public function addPostaudition(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'audition_title' => 'required', 
+            'audition_date' => 'required', 
+            'audition_time' => 'required', 
+            //'age_group' => 'required',
+            'location' => 'required',
+            'production_description' => 'required',
+            //'skills' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+
+        $validator = Validator::make($request->all() , $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+			  
+            $postaudition = new Postaudition;
+            $postaudition->user_id = $data['user_id'];;
+            $postaudition->audition_title = $data['audition_title'];
+            if(!empty($data['category'])){
+               $postaudition->category = $data['category']; 
+            }else{
+                $postaudition->category = 0;
+            }
+            if(!empty($data['audition_type'])){
+               $postaudition->audition_type = $data['audition_type']; 
+            }
+            if(!empty($data['photography_type'])){
+               $postaudition->photography_type = $data['photography_type']; 
+            }
+            
+			if(!empty($data['audition_date']) && !empty($data['audition_time'])){
+                $postaudition->expire_date = $data['audition_date']. " ". $data['audition_time'];
+            }
+			
+			if(!empty($data['gender'])){
+                $postaudition->gender = $data['gender'];
+            }
+			
+            if(!empty($data['union_type'])){
+				$postaudition->union_type = $data['union_type'];
+            }
+			
+            if(!empty($data['roles'])){
+                $postaudition->roles = $data['roles'];
+            }
+			
+			if(!empty($data['age_group'])){
+				$postaudition->age_group = $data['age_group'];
+			}
+			
+            $postaudition->location = $data['location'];
+            $postaudition->status = '1';
+            $postaudition->production_description = $data['production_description'];
+            
+			
+			if(!empty($data['skills'])){
+				$postaudition->skills = $data['skills'];
+			}
+			
+			if(!empty($data['studio_name'])){
+				$postaudition->studio_name = $data['studio_name'];
+			}
+			
+			if(!empty($data['compensation'])){
+				$postaudition->compensation = $data['compensation'];
+			}
+			
+			if(!empty($data['compensation_description'])){
+				$postaudition->compensation_description = $data['compensation_description'];
+			}
+			
+			if(!empty($data['production_website'])){
+				$postaudition->production_website = $data['production_website'];
+			}
+			
+			if(!empty($data['audition_location'])){
+				$postaudition->audition_location = $data['audition_location'];
+			}
+			
+			/* if(!empty($data['role_title'])){
+				$role_title = $data['role_title'];
+				
+				foreach($role_title as $role){
+					$created_at = date("Y-m-d H:i:s");
+					$updated_at = date("Y-m-d H:i:s");
+					
+					//check if role exists
+					$roleData =   DB::select("SELECT id FROM roles WHERE role_title = '". $role. "'");
+					
+					if(empty($roleData)){ 
+						DB::insert('insert into roles (id, role_title,created_at,updated_at) values (?, ?, ?, ?)', [Null,$role, $created_at,$updated_at]);
+						 
+					}
+				}
+				$postaudition->roles = implode(',',$role_title);
+			} */
+			
+			if(!empty($data['roles'])){
+				$ids = array();
+				foreach($data['roles'] as $roledata){
+					
+					if(empty($data['skills']) && !empty($roledata['skills'])){
+						$postaudition->skills = $roledata['skills'];
+					} 
+					
+					$object = Role::updateOrCreate($roledata);
+					 
+					$lastid = $object->id;
+					
+					$ids[] = $lastid;
+				}
+				$postaudition->roles = implode(',',$ids);
+			}
+			 
+			
+            if($request->file('photography_image')){ 
+			   $file = $request->file('photography_image');
+			   $name= 'public/assets/photography/'.time(). str_replace( " ", "_",$file->getClientOriginalName()); 
+			   $file->move(public_path().'/assets/photography/',  $name);
+			   $postaudition->photography_image =  $name;
+            }
+			
+            if ($postaudition->save())
+            {
+                if($postaudition->skills != ''){
+					$userskill = $postaudition->skills;
+					
+					$usersbyskill =   DB::select("SELECT * FROM users WHERE skills REGEXP CONCAT('(^|,)(', REPLACE('$userskill', ',', '|'), ')(,|$)') AND notification_status = '1' AND status = '1' AND user_type = '1'");
+					
+					foreach($usersbyskill as $usersbyskillval){
+
+						$message = "Audition added may be interested in";
+						$notification_array = array(
+							'title' => 'Audition added, may be you are interested',
+							'body' => $message
+						);
+						//FCM api URL
+						$url = 'https://fcm.googleapis.com/fcm/send';
+		
+						//api_key available in Firebase Console -> Project Settings -> CLOUD MESSAGING -> Server key
+						$server_key = 'AAAAYCe7MYI:APA91bG2BCIUbYLUUeEBmnvmP0gEyKaGwdejDUJC7PZGVQjjywyRwaB__vRSLEBNzD3-rfaODr9a3CeWs_9DVVjH4esvL-0M5xuvab7sS-KrLm--13tXWpXHSoz-IODsZkFxbQT5WpAb';
+						$fields = array();
+						$fields['notification'] = $notification_array;
+						
+						$fields['to'] = $usersbyskillval->device_token;
+						$headers = array(
+							'Content-Type:application/json',
+							'Authorization:key=' . $server_key
+						);
+						$ch = curl_init();
+						curl_setopt($ch, CURLOPT_URL, $url);
+						curl_setopt($ch, CURLOPT_POST, true);
+						curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+						curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+						curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+						curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+						$responce = curl_exec($ch);
+						curl_close($ch);
+					
+					}
+				}
+                
+                
+                $response['status'] = "true";
+                $response['message'] = "Audition Successfully added";
+                return response()->json($response);
+            }
+            else
+            {
+                $response['status'] = "false";
+                $response['message'] = "Something went wrong. Please Try again.";
+                return response()->json($response);
+            }
+        }
+    }
+	
+    public function updatePostaudition(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+			'audition_id' => 'required',
+            'audition_title' => 'required', 
+            'audition_date' => 'required', 
+            'audition_time' => 'required', 
+            //'age_group' => 'required',
+            'location' => 'required',
+            'production_description' => 'required',
+            //'skills' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+
+        $validator = Validator::make($request->all() , $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            
+            $postaudition = Postaudition::find($data['audition_id']);
+              
+			$postaudition->user_id = $data['user_id'];
+			
+            $postaudition->audition_title = $data['audition_title'];
+			
+            if(!empty($data['category'])){
+               $postaudition->category = $data['category']; 
+            }else{
+                $postaudition->category = 0;
+            }
+            if(!empty($data['audition_type'])){
+               $postaudition->audition_type = $data['audition_type']; 
+            }
+            if(!empty($data['photography_type'])){
+               $postaudition->photography_type = $data['photography_type']; 
+            }
+            
+			if(!empty($data['audition_date']) && !empty($data['audition_time'])){
+                $postaudition->expire_date = $data['audition_date']. " ". $data['audition_time'];
+            }
+			
+			if(!empty($data['gender'])){
+                $postaudition->gender = $data['gender'];
+            }
+			
+            if(!empty($data['union_type'])){
+				$postaudition->union_type = $data['union_type'];
+            }
+			
+            if(!empty($data['roles'])){
+                $postaudition->roles = $data['roles'];
+            }
+			
+			if(!empty($data['age_group'])){
+				$postaudition->age_group = $data['age_group'];
+			}
+			
+            $postaudition->location = $data['location'];
+            $postaudition->status = '1';
+            $postaudition->production_description = $data['production_description'];
+             
+			
+			if(!empty($data['skills'])){
+				$postaudition->skills = $data['skills'];
+			}
+			if(!empty($data['studio_name'])){
+				$postaudition->studio_name = $data['studio_name'];
+			}
+			
+			if(!empty($data['compensation'])){
+				$postaudition->compensation = $data['compensation'];
+			}
+			
+			if(!empty($data['compensation_description'])){
+				$postaudition->compensation_description = $data['compensation_description'];
+			}
+			
+			if(!empty($data['production_website'])){
+				$postaudition->production_website = $data['production_website'];
+			}
+			
+			if(!empty($data['audition_location'])){
+				$postaudition->audition_location = $data['audition_location'];
+			}
+			  
+			if(!empty($data['roles'])){
+				$ids = array();
+				foreach($data['roles'] as $roledata){
+					$object = Role::updateOrCreate($roledata);
+					 
+					$lastid = $object->id;
+					
+					$ids[] = $lastid;
+				}
+				$postaudition->roles = implode(',',$ids);
+			} 
+            
+            if($request->file('photography_image')){ 
+			   $file = $request->file('photography_image');
+			   $name= 'public/assets/photography/'.time(). str_replace( " ", "_",$file->getClientOriginalName()); 
+			   $file->move(public_path().'/assets/photography/',  $name);
+			   $postaudition->photography_image =  $name;
+            }
+
+            if ($postaudition->save())
+            {
+                $response['status'] = "true";
+                $response['message'] = "Post Audition Successfully updated";
+                return response()->json($response);
+            }
+            else
+            {
+                $response['status'] = "false";
+                $response['message'] = "Something went wrong. Please Try again.";
+                return response()->json($response);
+            }
+        }
+    }
+	
+    public function postAuditionApply(Request $request) {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'post_audition_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all() , $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $audiotioparticipant = Auditionparticipant::where(["user_id" => $data['user_id'], "post_audition_id" => $data['post_audition_id']])->get();
+            if(count($audiotioparticipant) > 0){
+                $response['status'] = "false";
+                $response['message'] = "You have already applied";
+                return response()->json($response);
+            }else{
+                $paudiparti = new Auditionparticipant;
+                $paudiparti->user_id = $data['user_id'];;
+                $paudiparti->post_audition_id = $data['post_audition_id'];
+                if ($paudiparti->save())
+                {
+                
+                $postauditiondata = Postaudition::where("id", $data['post_audition_id'])->first();
+                $userdata = User::where("id", $postauditiondata['user_id'])->first();
+
+                if($userdata['notification_status'] == 1){
+                    $message = "Apply audition by auditioner";
+                    $notification_array = array(
+                        'title' => 'Apply audition by auditioner',
+                        'body' => $message
+                    );
+                    //FCM api URL
+                    $url = 'https://fcm.googleapis.com/fcm/send';
+    
+                    //api_key available in Firebase Console -> Project Settings -> CLOUD MESSAGING -> Server key
+                    $server_key = 'AAAAYCe7MYI:APA91bG2BCIUbYLUUeEBmnvmP0gEyKaGwdejDUJC7PZGVQjjywyRwaB__vRSLEBNzD3-rfaODr9a3CeWs_9DVVjH4esvL-0M5xuvab7sS-KrLm--13tXWpXHSoz-IODsZkFxbQT5WpAb';
+                    $fields = array();
+                    $fields['notification'] = $notification_array;
+                    $fields['to'] = $userdata['device_token'];
+                    $headers = array(
+                        'Content-Type:application/json',
+                        'Authorization:key=' . $server_key
+                    );
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+                    $responce = curl_exec($ch);
+                    curl_close($ch);
+                    
+                }
+                    
+                    
+                    
+                    $response['status'] = "true";
+                    $response['message'] = "Successfully Applied";
+                    return response()->json($response);
+                }
+                else
+                {
+                    $response['status'] = "false";
+                    $response['message'] = "Something went wrong. Please Try again.";
+                    return response()->json($response);
+                }
+            }
+        }
+    }
+    
+    public function postauditionappliedlist(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $postaudition = DB::table('post_audition_participants')
+            ->join('post_auditions', 'post_audition_participants.post_audition_id', '=', 'post_auditions.id')
+            ->leftJoin('categories', 'post_auditions.category', '=', 'categories.id')
+            ->select('post_auditions.*', 'categories.category_name')
+            ->where('post_audition_participants.user_id', $data['user_id'])
+            ->where('post_auditions.status', '1')
+            ->get();
+            
+            
+            $postauditiondata = array();
+            foreach($postaudition as $postauditionval){
+                
+                
+                $applied = Auditionparticipant::where("post_audition_id", $postauditionval->id)->where("user_id", $data['user_id'])->first();
+                $checkapply = false;
+                if(!empty($applied)){
+                    $checkapply = true;
+                }
+                $promember = DB::table('users')->select('pro_member')
+                ->where('id', $postauditionval->user_id)
+                ->where('pro_member', '1')
+                ->first();
+                $checkpromember = false;
+                if(!empty($promember)){
+                    $checkpromember = true;
+                }
+                
+                $postauditiondata[] = array 
+    			(
+    			  "id"=> $postauditionval->id,  
+    			  "user_id"=> $postauditionval->user_id,  
+    			  "audition_title"=> $postauditionval->audition_title,  
+    			  "category"=> $postauditionval->category,  
+    			  "expire_date"=> $postauditionval->expire_date,
+    			  "gender"=> $postauditionval->gender, 
+    			  "roles"=> $postauditionval->roles,
+    			  "union_type"=> $postauditionval->union_type,
+    			  "audition_type"=> $postauditionval->audition_type,
+    			  "age_group"=> $postauditionval->age_group,  
+    			  "location"=> $postauditionval->location,  
+    			  "photography_type"=> $postauditionval->photography_type,  
+    			  "photography_image"=> $postauditionval->photography_image,  
+    			  "production_description"=> $postauditionval->production_description,  
+    			  "skills"=> $postauditionval->skills,  
+    			  "status"=> $postauditionval->status,  
+    			  "category_name"=> $postauditionval->category_name, 
+    			  "applied"=> $checkapply,
+    			  "pro_member"=> $checkpromember
+    			  
+    			  
+                );
+                
+            }
+            
+                $response['status'] = "true";
+                $response['message'] = "Post Audition Applied List";
+                $response['data'] = $postauditiondata;
+                return response()->json($response);
+        }
+    }
+    
+     public function auditionParticipants(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'audtion_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $postaudition = DB::table('post_auditions')
+            ->leftJoin('categories', 'post_auditions.category', '=', 'categories.id')
+            ->select('post_auditions.*', 'categories.category_name')
+            ->where('post_auditions.id', $data['audtion_id'])
+            ->first();
+            
+            
+            //$audiotioparticipant = Portfolio::where(["post_audition_id" => $data['audtion_id']])->first();
+
+            
+            $participants = DB::table('post_audition_participants')
+            ->join('users', 'post_audition_participants.user_id', '=', 'users.id')
+            //->leftJoin('portfolios', 'post_audition_participants.user_id', '=', 'portfolios.user_id')
+            //->join('portfolios', 'post_audition_participants.user_id', '=', 'portfolios.user_id')
+            ->select('post_audition_participants.*', 'users.*')
+            ->where('post_audition_id', $data['audtion_id'])
+            ->get();
+            
+            
+            $participantsdata = array();
+            
+            foreach($participants as $participantsval){
+                
+                $audiotioparticipant = Portfolio::where(["user_id" => $participantsval->user_id])->first();
+                
+                $participantsdata[] = array
+    			(
+    			    "id"=> $participantsval->id,  
+    			    "user_id"=> $participantsval->user_id,  
+                    "post_audition_id"=> $participantsval->post_audition_id,
+                    "name"=> $participantsval->name,
+                    "stage_name"=> $participantsval->stage_name,
+                    "company_name"=> $participantsval->company_name,
+                    "email"=> $participantsval->email,
+                    "phone"=> $participantsval->phone,
+                    "website"=> $participantsval->website,
+                    "image"=> $participantsval->image,
+                    "age"=> $participantsval->age,
+                    "height"=> $participantsval->height,
+                    "location"=> $participantsval->location,
+                    "gender"=> $participantsval->gender,
+                    "roles"=> $participantsval->roles,
+                    "user_type"=> $participantsval->user_type,
+                    "union_type"=> $participantsval->union_type,
+                    "skills"=> $participantsval->skills,
+                    "description"=> $participantsval->description,
+                    "status"=> $participantsval->status,
+                    "device_type"=> $participantsval->device_type,
+                    "device_token"=> $participantsval->device_token,
+                    "headshot_first"=> $audiotioparticipant['headshot_first'],
+                "headshot_second"=> $audiotioparticipant['headshot_second'],
+                "document_first"=> $audiotioparticipant['document_first'],
+                "document_second"=> $audiotioparticipant['document_second'],
+                "audio_first"=> $audiotioparticipant['audio_first'],
+                "audio_second"=> $audiotioparticipant['audio_second'],
+                "video_first"=> $audiotioparticipant['video_first'],
+                "video_second"=> $audiotioparticipant['video_second'],
+    			  
+                );
+                
+                
+            }
+            
+            
+            $auditionparticipant = array(
+				"id"				=>  $postaudition->id,
+				"audition_title"	=>  $postaudition->audition_title,
+				"location"	=>  $postaudition->location,
+				"roles"	=>  $postaudition->roles,
+				"age_group"	=>  $postaudition->age_group,
+				"skills"	=>  $postaudition->skills,
+				"audition_date"	=>  $postaudition->expire_date,
+				"category" 			=>  $postaudition->category_name,
+				"participants"      =>  $participantsdata,
+				);
+            
+            
+                $response['status'] = "true";
+                $response['message'] = "Post Audition Participants";
+                $response['data'] = $auditionparticipant;
+                return response()->json($response);
+        }
+    }
+    
+    
+    public function deleteaudiotion(Request $request){
+        
+        $data = $request->all();
+        $rules = [
+            'audition_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+
+        $validator = Validator::make($request->all() , $rules);
+
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }else{
+            
+            $firestore = new FireStoreApiClient(
+                             'stage-picker', 'AIzaSyB21YVALjKHU_Q3S76qT9vdH908esWbTJI'
+                            );
+        
+         $audiotiondata = Postaudition::where(["id" => $data['audition_id']])->first();
+
+         $auditiontitle = $audiotiondata['audition_title'];
+         $auditionid = $data['audition_id'];
+         $deleteablemany = $auditionid.'_'.$auditiontitle;
+        
+         $firestore->deleteDocument('groups', $deleteablemany);
+         
+        $audiotioparticipant = Auditionparticipant::where(["post_audition_id" => $data['audition_id']])->get();
+        
+        foreach($audiotioparticipant as $audiotioparticipantval){
+            
+          $participant_id =  $audiotioparticipantval->user_id;
+            $deleteableonebyone = $auditionid.'_'.$participant_id;
+            $firestore->deleteDocument('groups', $deleteableonebyone);
+        }
+
+            Postaudition::where('id', '=', $data['audition_id'])->delete();
+            Auditionparticipant::where('post_audition_id', '=', $data['audition_id'])->delete();
+            $response['status'] = "true";
+            $response['message'] = "Audition Data deleted successfully";
+            return response()->json($response);
+            
+        }
+    }
+    
+    
+    
+    public function photographylist(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+            'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $postaudition = DB::table('post_auditions')
+            ->select('post_auditions.*')
+            ->where('user_id', $data['user_id'])
+            ->where('status', '1')
+            ->where('audition_type', '2')
+            ->get();
+            
+                $response['status'] = "true";
+                $response['message'] = "Photography Audition List";
+                $response['data'] = $postaudition;
+                return response()->json($response);
+        }
+    }
+    
+    public function photographysearch(Request $request)
+    {
+        $data = $request->all();
+        $rules = [
+             'user_id' => 'required',
+            'device_type' => 'required',
+            'device_token' => 'required',
+            ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails())
+        {
+            $response['status'] = "false";
+            $response['message'] = $this->validationHandle($validator->messages());
+            return response()->json($response);
+        }
+        else
+        {
+            $sql = "SELECT post_auditions.* FROM post_auditions WHERE status = '1' AND audition_type = '2'";
+            $where = '';
+            if(!empty($data['photography_type'])){ 
+                $photographytype = $data['photography_type'];
+            $where  .= " AND photography_type = '$photographytype'";
+            }
+            if(!empty($data['skills'])){ 
+                $skills = $data['skills'];
+            $where .= " AND skills REGEXP CONCAT('(^|,)(', REPLACE('$skills', ',', '|'), ')(,|$)')";
+            }
+            if(!empty($data['location'])){ 
+                $location = $data['location'];
+            $where .= " AND location = '$location'";
+            }
+            if(!empty($data['age_group'])){ 
+                $age_group = $data['age_group'];
+            $where .= " AND age_group = '$age_group'";
+            }
+            
+            $completequery = $sql." ".$where;
+            $postaudition =   DB::select("$completequery");
+            $postauditiondata = array();
+            foreach($postaudition as $postauditionval){
+                
+                
+                $applied = Auditionparticipant::where("post_audition_id", $postauditionval->id)->where("user_id", $data['user_id'])->first();
+
+                $promember = DB::table('users')->select('pro_member')
+                ->where('id', $postauditionval->user_id)
+                ->where('pro_member', '1')
+                ->first();
+                
+                $checkapply = false;
+                if(!empty($applied)){
+                    $checkapply = true;
+                }
+                $promember = DB::table('users')->select('pro_member')
+                ->where('id', $postauditionval->user_id)
+                ->where('pro_member', '1')
+                ->first();
+                $checkpromember = false;
+                if(!empty($promember)){
+                    $checkpromember = true;
+                }
+                $postauditiondata[] = array
+                (
+    			  "id"=> $postauditionval->id,  
+    			  "user_id"=> $postauditionval->user_id,  
+    			  "audition_title"=> $postauditionval->audition_title,  
+    			  "category"=> $postauditionval->category,  
+    			  "expire_date"=> $postauditionval->expire_date,  
+    			  "gender"=> $postauditionval->gender,  
+    			  "union_type"=> $postauditionval->union_type,  
+    			  "photography_type"=> $postauditionval->photography_type,  
+    			  "photography_image"=> $postauditionval->photography_image,  
+    			  "roles"=> $postauditionval->roles,  
+    			  "age_group"=> $postauditionval->age_group,  
+    			  "location"=> $postauditionval->location,  
+    			  "production_description"=> $postauditionval->production_description,  
+    			  "skills"=> $postauditionval->skills,  
+    			  "status"=> $postauditionval->status,  
+    			  "applied"=> $checkapply,
+    			  "pro_member"=> $checkpromember
+    			  
+                );
+                
+                
+            }
+            
+            $postaudition =   DB::select("$completequery");
+            
+                $response['status'] = "true";
+                $response['message'] = "Search Result";
+                $response['data'] = $postauditiondata;
+                return response()->json($response);
+        }
+    }
+  
+}
+

@@ -1,0 +1,114 @@
+<?php
+namespace App\Http\Controllers\Admin;
+
+use DB;
+use App\Models\Category;
+use App\Http\Controllers\AdminController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Carbon\CarbonInterval;
+use \Session;
+use App\Lib\Uploader;
+//use Illuminate\Mail\Mailer;
+class CategoryController extends AdminController
+{
+
+    public function list(Request $request)
+    {
+        $category = new Category;
+        $category = $category->orderBy('id', 'DESC')
+            ->get();
+        return \View::make("admin/category/list", compact('category'));
+    }
+
+    public function add(Request $request)
+    {
+        return \View::make('admin/category/add');
+    }
+
+    public function edit(Request $request, $id = null)
+    {
+        $category = "";
+        if (!empty($id))
+        {
+            $category = Category::where('id', $id)->first();
+        }
+        return \View::make('admin/category/edit', compact('id', 'category'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->all();
+        $rules = ['category_name' => 'required', ];
+
+        $validator = Validator::make($request->all() , $rules);
+        if ($validator->fails())
+        {
+            return redirect()
+                ->back()
+                ->withInput($request->input())
+                ->withErrors($validator->errors());
+        }
+        else
+        {
+            $category = new Category;
+            $category->category_name = $data['category_name'];
+            $category->type = $data['type'];
+            $category->save();
+            return redirect("admin/category")
+                ->with('success', "Category successful updated.")
+                ->send();
+            return response()
+                ->json(['success' => true], 200);
+        }
+    }
+
+    public function update(Request $request)
+    {
+
+        $data = $request->all();
+        $rules = ['category_name' => 'required', ];
+
+        $validator = Validator::make($request->all() , $rules);
+        if ($validator->fails())
+        {
+            return redirect()
+                ->back()
+                ->withInput($request->input())
+                ->withErrors($validator->errors());
+        }
+        else
+        {
+            $category = Category::find($data['category_id']);
+            $category->category_name = $data['category_name'];
+			$category->type = $data['type'];
+            $category->save();
+            return redirect("admin/category")
+                ->with('success', "Category successful updated.")
+                ->send();
+        }
+
+    }
+
+    public function delete($id)
+    {
+        try
+        {
+            Category::where('id', '=', $id)->delete();
+            return redirect("admin/category")
+                ->with('success', "Category deleted successfully")
+                ->send();
+        }
+        catch(\Exception $e)
+        {
+            return redirect("admin/category")->with('error', "Please try again")
+                ->send();
+
+        }
+
+    }
+
+}
+

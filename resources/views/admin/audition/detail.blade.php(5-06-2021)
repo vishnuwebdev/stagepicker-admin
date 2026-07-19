@@ -1,0 +1,137 @@
+@extends('layouts.admin')
+@section('content')
+<style>
+.post-audition-details-part span {
+    width: 220px;
+    display: inline-block;
+    font-size: 16px;
+    color: #000;
+    font-weight: 500;
+}
+.participant-img1 {
+    width: 150px;
+    float: left;
+    margin-right: 15px;
+}
+.participant-img1 img {
+    width: 150px;
+    height: 150px; 
+}
+</style>
+
+<div class="right-content">
+	<div class="container">
+		<div class="row">
+			<div id="flFormsGrid" class="col-lg-12 layout-spacing">
+				<div class="statbox widget box box-shadow">
+					<div class="widget-header">
+						<div class="row">
+							<div class="col-xl-12 col-md-12 col-sm-12 col-12">
+								<h4>Post Audition Details</h4>
+							</div>                                                                
+						</div>
+					</div>
+					<div class="widget-content widget-content-area">
+						<div class="stage-profile-details-section">
+							<div class="row">
+							 <div class="col-md-12">
+							  <div class="post-audition-details-part"> 
+								<p><span>Title : </span> {{ $detail->audition_title }}</p>
+								<p><span>Category : </span> <?php if(!empty($detail->category_name)){ echo $detail->category_name; }else{ echo "Photography"; } ?> </p>
+								<p><span>Audition Date  : </span> {{ $detail->expire_date }} </p> 
+								<p><span>Age Group : </span>{{ $detail->age_group }} Years</p>
+								<p><span>Location : </span> {{ $detail->location }} </p>
+								<p><span>Description : </span> {{ $detail->production_description }} </p>
+								<p><span>Skills :  </span> {{ $detail->skills }} </p>
+								
+								<?php if(!empty($detail->studio_name)){ ?>
+									<p><span>Studio Name  : </span>  <?php echo $detail->studio_name;  ?> </p>
+								<?php } ?>
+								
+								<?php if(!empty($detail->compensation)){ ?>
+									<p><span>Compensation  : </span> <?php echo ($detail->compensation == '1')?'Yes':'No';  ?> </p>
+								<?php } ?>
+								
+								<?php if(!empty($detail->compensation_description)){ ?>
+									<p><span>Compensation Description  : </span>  <?php echo $detail->compensation_description;  ?> </p>
+								<?php } ?>
+								
+								<?php if(!empty($detail->production_website)){ ?>
+									<p><span>Production Website  : </span>  <?php echo $detail->production_website;  ?> </p>
+								<?php } ?>
+								
+								<?php if(!empty($detail->audition_location)){ ?>
+									<p><span>Audition Location  : </span>  <?php echo $detail->audition_location;  ?> </p>
+								<?php } ?>
+								
+								
+								<p><span>Roles : </span>{{ $detail->roles }} </p>
+								
+								<?php /* if(!empty($rolesData)){ ?>
+								<p><span>Roles :  </span> </p>
+								<?php
+									foreach($rolesData as $role){
+								?>
+									<p><?php echo $role->role_title;?></p>
+								<?php }} */ ?> 
+							  </div>
+							</div>
+							</div>
+							<div class="row">
+							  <div class="col-md-12 information-text">
+							   <h5> (<?php echo count($participants); ?>) Participants </h5>
+							 </div>
+							 <div class="col-md-6">
+							  <div class="post-audition-details-part">
+								  <?php foreach($participants as $participantsval){ ?> 
+								<div class="participant-member">
+								  <div class="participant-img">
+									<?php if(!empty($participantsval->image)){ ?>
+										<img src="{{asset($participantsval->image)}}">
+									<?php }else{ ?> 
+										<img src="{{asset('public/assets/img/stagepicker-logo.png')}}">
+									<?php } ?>
+								  </div>
+								  <div class="participant-details">
+									<p>{{ $participantsval->name }}</p>
+									<p>Age: <?php if(!empty($participantsval->age)){echo $participantsval->age.' Years'; } ?> <span> | <?php if(!empty($participantsval->height)){echo $participantsval->height; } ?>  </span></p>
+									<?php if(!empty($participantsval->role_title)){ ?>
+										<p>Role: <?php echo $participantsval->role_title;  ?> </p>
+									<?php } ?> 
+								  </div>
+								</div>
+								<?php } ?>
+							  </div>
+							</div>
+							</div>
+							
+							<?php if(!empty($photos)){ ?>
+							<div class="row">
+							  <div class="col-md-12 information-text">
+							   <h5> (<?php echo count($photos); ?>) Photography Image </h5>
+							 </div>
+							 <div class="col-md-6">
+							  <div class="post-audition-details-part">
+								  <?php foreach($photos as $img){ ?> 
+								 
+								  <div class="participant-img1">
+									<?php if(!empty($img->image)){ ?>
+										<img src="{{asset($img->image)}}">
+									<?php }else{ ?> 
+										<img src="{{asset('public/assets/img/stagepicker-logo.png')}}">
+									<?php } ?>
+								  </div>  
+								<?php } ?>
+							  </div>
+							</div>
+							</div>
+							<?php } ?>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+@endsection

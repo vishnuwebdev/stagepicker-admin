@@ -125,7 +125,7 @@ class ClassController extends ApiController
 			foreach($class as $ks=>$vs)
 			{
 				
-				$class[$ks]->image=URL::to('/').'/admin/uploads/class/'.$vs->image;
+				$class[$ks]->image=asset('public/admin/uploads/class/'.$vs->image);
 			}
 			
 			$webinars=DB::table('webinars')->where('status',1)->orderBy('id','desc')->get();
@@ -133,14 +133,14 @@ class ClassController extends ApiController
 			foreach($webinars as $ks=>$vs)
 			{
 				
-				$webinars[$ks]->image=URL::to('/').'/admin/uploads/webinar/'.$vs->image;
+				$webinars[$ks]->image=asset('public/admin/uploads/webinar/'.$vs->image);
 			}
 		    $array['webinars']=$webinars;
 			$mdata= Merchandise::with('get_image')->where('status',1)->orderBy('id','desc')->get();
 			foreach($mdata as $ks=>$vs)
 			{
 				
-				$mdata[$ks]->image=URL::to('/').'/admin/uploads/merchandise/'.$vs->image;
+				$mdata[$ks]->image=asset('public/admin/uploads/merchandise/'.$vs->image);
 				
 				
 			}
@@ -174,7 +174,7 @@ class ClassController extends ApiController
             $class=DB::table('classes')->where('status',1)->where('id',$request->class_id)->first();
 			
 				
-			$class->image=URL::to('/').'/admin/uploads/class/'.$class->image;
+			$class->image=asset('public/admin/uploads/class/'.$class->image);
 			
             $response['data'] = $class;
             $response['message'] ="Class Details";
@@ -203,7 +203,7 @@ class ClassController extends ApiController
         {
 			$array=array();
             $class=DB::table('webinars')->where('status',1)->where('id',$request->webinar_id)->first();
-			$class->image=URL::to('/').'/admin/uploads/webinar/'.$class->image;
+			$class->image=asset('public/admin/uploads/webinar/'.$class->image);
 			
             $response['data'] = $class;
             $response['message'] ="webinar Details";
@@ -233,7 +233,7 @@ class ClassController extends ApiController
 			$array=array();
             $mdata= Merchandise::with('get_image','get_date')->where('status',1)->where('id',$request->m_id)->first();
 			
-			 $mdata->image=URL::to('/').'/admin/uploads/merchandise/'.$mdata->image;
+			 $mdata->image=asset('public/admin/uploads/merchandise/'.$mdata->image);
 			
             $response['data'] = $mdata;
             $response['message'] ="Merchandise Details";

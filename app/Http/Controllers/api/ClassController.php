@@ -30,15 +30,11 @@ use \Session;
 use Socialite;
 use App\Models\Mail as Mail;
 use Illuminate\Support\Facades\Auth;
-use App\Lib\StripePayment;
-
 use App\Models\ContactRequest;
 use URL;
 use DB;
 use File;
 use App\Models\RoleType;
-
-require_once('vendor/stripe/init.php');
 
 class ClassController extends ApiController
 {

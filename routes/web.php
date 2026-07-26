@@ -111,6 +111,11 @@ Route::group(['middleware' => 'auth'] , function() {
     Route::any('admin/delete-merchandise/{id}', 'App\Http\Controllers\admin\MerchandiseController@delete')->name('admin/delete_merchandise');
     Route::any('admin/delete-merchandise-image/{id}', 'App\Http\Controllers\admin\MerchandiseController@deleteImage')->name('admin/delete_merchandise_image');
 
+    //Orders Management (Merchandise checkout / order history / returns)
+    Route::get('admin/orders', 'App\Http\Controllers\admin\OrderController@list')->name('admin/orders');
+    Route::any('admin/view-order/{id}', 'App\Http\Controllers\admin\OrderController@view')->name('admin/view_order');
+    Route::post('admin/update-order-status/{id}', 'App\Http\Controllers\admin\OrderController@updateStatus')->name('admin/update_order_status');
+
     //Route::get('admin/add-subscription', 'App\Http\Controllers\admin\SubscriptionController@add')->name('admin/add-subscription');
     //Route::post('admin/subscription/store', 'App\Http\Controllers\admin\SubscriptionController@store')->name('admin/subscription/store');
     //Route::any('admin/edit-subscription/{key}', 'App\Http\Controllers\admin\SubscriptionController@edit')->name('admin/edit-subscription');

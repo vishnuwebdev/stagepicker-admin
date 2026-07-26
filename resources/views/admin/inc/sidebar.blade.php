@@ -162,14 +162,23 @@
 				<li class="menu {{ Request::segment(2) === 'merchandise' ? 'active' : null }}">
 					<a href="{{ url('admin/merchandise') }}"  data-active="" aria-expanded="" class="dropdown-toggle">
 						<div class="">
-							
+
 
 							 <span>- Merchandise</span>
 						</div>
 					</a>
 				</li>
+				<li class="menu {{ Request::segment(2) === 'orders' ? 'active' : null }}">
+					<a href="{{ url('admin/orders') }}"  data-active="" aria-expanded="" class="dropdown-toggle">
+						<div class="">
+
+
+							 <span>- Orders</span>
+						</div>
+					</a>
+				</li>
 			</ul>
-			</li>	
+			</li>
 
                   <?php } else if($per->moduleId == 'p7' && $per->view)  { ?>
 

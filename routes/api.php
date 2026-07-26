@@ -156,6 +156,13 @@ Route::any('/get-class-details', 'App\Http\Controllers\api\ClassController@get_c
 Route::any('/get-webinar-details', 'App\Http\Controllers\api\ClassController@get_webinar_details')->name('get-webinar-details');
 Route::any('/get-merchandise-detail', 'App\Http\Controllers\api\ClassController@get_merchandise_details')->name('get-merchandise-detail');
 
+//marketplace order management (Merchandise checkout / order history / returns)
+Route::any('/create-order', 'App\Http\Controllers\api\OrderController@create_order')->name('create-order');
+Route::any('/get-orders', 'App\Http\Controllers\api\OrderController@get_orders')->name('get-orders');
+Route::any('/get-order-detail', 'App\Http\Controllers\api\OrderController@get_order_detail')->name('get-order-detail');
+Route::any('/request-order-return', 'App\Http\Controllers\api\OrderController@request_order_return')->name('request-order-return');
+Route::any('/order-invoice', 'App\Http\Controllers\api\OrderController@order_invoice')->name('order-invoice');
+
 //credit management
 
 Route::any('/update-credit', 'App\Http\Controllers\api\ClassController@updateCredit')->name('updateCredit');

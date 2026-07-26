@@ -1,3 +1,21 @@
+# Block access to dotfiles (.env, .git, etc.)
+
+<FilesMatch "^\.">
+Require all denied
+</FilesMatch>
+
+# Block direct access to sensitive project files
+
+<FilesMatch "\.(env|log|lock|json|yml|yaml|sql|md)$">
+Require all denied
+</FilesMatch>
+
+# Block direct access to app internals — only public/ should ever be served
+
+<IfModule mod_rewrite.c>
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor)/ - [F,L]
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -18,10 +36,13 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
 </IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit
+
 # Set the “ea-php73” package as the default “PHP” programming language.
+
 <IfModule mime_module>
   AddHandler application/x-httpd-ea-php73 .php .php7 .phtml
 </IfModule>

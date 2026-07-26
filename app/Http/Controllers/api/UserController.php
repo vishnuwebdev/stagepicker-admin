@@ -28,8 +28,6 @@ use App\Models\ContactRequest;
 use DB;
 use App\Models\RoleType;
 
-require_once('vendor/stripe/init.php');
-
 class UserController extends ApiController
 {
 

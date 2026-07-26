@@ -163,6 +163,11 @@ Route::any('/get-order-detail', 'App\Http\Controllers\api\OrderController@get_or
 Route::any('/request-order-return', 'App\Http\Controllers\api\OrderController@request_order_return')->name('request-order-return');
 Route::any('/order-invoice', 'App\Http\Controllers\api\OrderController@order_invoice')->name('order-invoice');
 
+//saved shipping addresses (checkout "select existing or add new" flow)
+Route::any('/get-addresses', 'App\Http\Controllers\api\AddressController@get_addresses')->name('get-addresses');
+Route::any('/add-address', 'App\Http\Controllers\api\AddressController@add_address')->name('add-address');
+Route::any('/delete-address', 'App\Http\Controllers\api\AddressController@delete_address')->name('delete-address');
+
 //credit management
 
 Route::any('/update-credit', 'App\Http\Controllers\api\ClassController@updateCredit')->name('updateCredit');

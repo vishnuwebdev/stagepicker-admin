@@ -9,7 +9,7 @@
          looks consistent with the admin panel without pulling in its full
          layout/sidebar — this is meant to be opened directly in a mobile
          browser from the Flutter app and printed/saved as a PDF. --}}
-    <link rel="stylesheet" href="{{ url('assets/css/apps/invoice.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/assets/css/apps/invoice.css') }}">
     <style>
         body { background: #fff; padding: 24px; }
         .invoice-print-actions { text-align: right; margin-bottom: 16px; }

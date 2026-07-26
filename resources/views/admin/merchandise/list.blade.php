@@ -50,7 +50,7 @@
                                                 <td>{{ $sr++ }}</td>
                                                 <td>
                                                     @if ($item->image)
-                                                    <img src="{{ url('admin/uploads/merchandise/'.$item->image) }}" width="50" height="50" style="object-fit:cover;">
+                                                    <img src="{{ asset('public/admin/uploads/merchandise/'.$item->image) }}" width="50" height="50" style="object-fit:cover;">
                                                     @endif
                                                 </td>
                                                 <td>{{ $item->title }}</td>

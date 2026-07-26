@@ -9,7 +9,6 @@ use App\Models\Merchandise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use URL;
 
 /**
  * Marketplace order domain — create order (checkout), order history, order
@@ -39,8 +38,13 @@ class OrderController extends ApiController
     {
         $order->load('items');
         $order->items->transform(function ($item) {
+            // Matches the asset('public/...') convention used across this
+            // app's Blade views (see admin/merchandise/*.blade.php) — this
+            // deployment's document root is the project root, not public/,
+            // so a plain url()/URL::to() path 404s and needs the extra
+            // "public/" segment to resolve to a real static file.
             if (!empty($item->image) && strpos($item->image, 'http') !== 0) {
-                $item->image = URL::to('/') . '/admin/uploads/merchandise/' . $item->image;
+                $item->image = asset('public/admin/uploads/merchandise/' . $item->image);
             }
             return $item;
         });

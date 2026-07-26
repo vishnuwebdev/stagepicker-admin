@@ -64,7 +64,7 @@
                         <div class="form-group col-md-6">
                         <label for="image">Main Image</label>
                         @if ($merchandise->image)
-                        <div class="mb-2"><img src="{{ url('admin/uploads/merchandise/'.$merchandise->image) }}" width="70" height="70" style="object-fit:cover;"></div>
+                        <div class="mb-2"><img src="{{ asset('public/admin/uploads/merchandise/'.$merchandise->image) }}" width="70" height="70" style="object-fit:cover;"></div>
                         @endif
                         <input type="file" class="form-control" name="image">
                         <small class="text-muted">Leave empty to keep the current image.</small>
@@ -97,7 +97,7 @@
                         <div class="row">
                             @foreach ($images as $img)
                             <div class="col-md-2 text-center mb-3">
-                                <img src="{{ url('admin/uploads/merchandise/'.$img->image) }}" width="80" height="80" style="object-fit:cover;"><br>
+                                <img src="{{ asset('public/admin/uploads/merchandise/'.$img->image) }}" width="80" height="80" style="object-fit:cover;"><br>
                                 <a onclick="return confirm('Remove this image?')" href="{{ url('admin/delete-merchandise-image',$img->id) }}" class="btn btn-sm btn-danger mt-1">Remove</a>
                             </div>
                             @endforeach

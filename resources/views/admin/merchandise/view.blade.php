@@ -52,7 +52,7 @@
                                         <th>Main Image</th>
                                         <td>
                                             @if ($merchandise->image)
-                                            <img src="{{ url('admin/uploads/merchandise/'.$merchandise->image) }}" width="100" height="100" style="object-fit:cover;">
+                                            <img src="{{ asset('public/admin/uploads/merchandise/'.$merchandise->image) }}" width="100" height="100" style="object-fit:cover;">
                                             @endif
                                         </td>
                                     </tr>
@@ -60,7 +60,7 @@
                                         <th>Gallery Images</th>
                                         <td>
                                             @foreach ($images as $img)
-                                            <img src="{{ url('admin/uploads/merchandise/'.$img->image) }}" width="80" height="80" style="object-fit:cover; margin-right:8px;">
+                                            <img src="{{ asset('public/admin/uploads/merchandise/'.$img->image) }}" width="80" height="80" style="object-fit:cover; margin-right:8px;">
                                             @endforeach
                                         </td>
                                     </tr>

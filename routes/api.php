@@ -163,6 +163,16 @@ Route::any('/get-order-detail', 'App\Http\Controllers\api\OrderController@get_or
 Route::any('/request-order-return', 'App\Http\Controllers\api\OrderController@request_order_return')->name('request-order-return');
 Route::any('/order-invoice', 'App\Http\Controllers\api\OrderController@order_invoice')->name('order-invoice');
 
+//generic Stripe payment gateway (reusable across checkout flows — see
+//api/PaymentController.php). create/sync are called by the app,
+//stripe-webhook is called by Stripe itself (no auth — verified via
+//Stripe-Signature instead, see StripeWebhookController).
+Route::any('/create-payment-intent', 'App\Http\Controllers\api\PaymentController@create_payment_intent')->name('create-payment-intent');
+Route::any('/sync-payment-status', 'App\Http\Controllers\api\PaymentController@sync_payment_status')->name('sync-payment-status');
+Route::any('/get-transaction-history', 'App\Http\Controllers\api\PaymentController@get_transaction_history')->name('get-transaction-history');
+Route::any('/get-transaction-detail', 'App\Http\Controllers\api\PaymentController@get_transaction_detail')->name('get-transaction-detail');
+Route::post('/stripe-webhook', 'App\Http\Controllers\api\StripeWebhookController@handle')->name('stripe-webhook');
+
 //saved shipping addresses (checkout "select existing or add new" flow)
 Route::any('/get-addresses', 'App\Http\Controllers\api\AddressController@get_addresses')->name('get-addresses');
 Route::any('/add-address', 'App\Http\Controllers\api\AddressController@add_address')->name('add-address');

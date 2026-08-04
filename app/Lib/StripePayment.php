@@ -320,5 +320,99 @@ class StripePayment {
         $charge = \Stripe\Charge::retrieve($charge_id, ["stripe_account" => $stripe_account]);
         return $charge;
     }
-    
+
+    /* =====================================================================
+     * PaymentIntent + PaymentSheet support (Flutter `flutter_stripe`).
+     *
+     * Added alongside the older Charge-based methods above rather than
+     * replacing them — `chargeAmountFromCard`/`makePayment` back the
+     * existing addstripeammount endpoint and are left untouched. Everything
+     * below backs the new generic payment_transactions flow
+     * (api/PaymentController.php) instead: the mobile app never sends raw
+     * card data to this backend at all — it only ever sees a PaymentIntent
+     * `client_secret` and confirms directly with Stripe via the native
+     * PaymentSheet, which is what keeps this integration PCI-scope-light.
+     * ===================================================================== */
+
+    /**
+     * Creates a Stripe PaymentIntent for the PaymentSheet to confirm.
+     *
+     * @param int $amountInSmallestUnit Amount in the currency's smallest
+     *   unit (cents for USD) — Stripe always expects an integer here.
+     * @param string $currency e.g. 'usd'
+     * @param array $metadata Free-form key/value context (transaction_id,
+     *   payable_type/id, user_id) — shows up in the Stripe dashboard and is
+     *   also what the webhook uses to find the matching local row.
+     * @param string|null $idempotencyKey Passed as the Idempotency-Key
+     *   header so a retried HTTP request (flaky network, double-tap) can't
+     *   create two PaymentIntents for the same attempt.
+     * @param array $paymentMethodTypes Defaults to letting Stripe decide
+     *   automatically (card, plus Apple Pay/Google Pay when the device and
+     *   Stripe account support them) via automatic_payment_methods.
+     * @return \Stripe\PaymentIntent
+     */
+    public function createPaymentIntent($amountInSmallestUnit, $currency, $metadata = [], $idempotencyKey = null, $paymentMethodTypes = null)
+    {
+        $params = [
+            'amount' => (int) $amountInSmallestUnit,
+            'currency' => $currency,
+            'metadata' => $metadata,
+        ];
+
+        if (!empty($paymentMethodTypes)) {
+            $params['payment_method_types'] = $paymentMethodTypes;
+        } else {
+            // Lets Stripe surface card + any enabled wallets (Apple Pay /
+            // Google Pay) in the same PaymentSheet without this backend
+            // needing to know which wallets are turned on in the dashboard.
+            $params['automatic_payment_methods'] = ['enabled' => true];
+        }
+
+        $options = [];
+        if (!empty($idempotencyKey)) {
+            $options['idempotency_key'] = $idempotencyKey;
+        }
+
+        return \Stripe\PaymentIntent::create($params, $options);
+    }
+
+    /**
+     * @return \Stripe\PaymentIntent
+     */
+    public function retrievePaymentIntent($paymentIntentId)
+    {
+        return \Stripe\PaymentIntent::retrieve($paymentIntentId);
+    }
+
+    /**
+     * Cancels a PaymentIntent that hasn't succeeded yet — used by the
+     * stale-payment sweep (ExpirePendingPaymentTransactions) so an
+     * abandoned checkout (app killed, network dropped mid-payment) doesn't
+     * leave money "in limbo": Stripe never actually captures funds for a
+     * PaymentIntent that's canceled instead of confirmed, so there is
+     * nothing to refund in this path — cancelling is enough to guarantee
+     * the customer was never charged.
+     *
+     * @return \Stripe\PaymentIntent
+     */
+    public function cancelPaymentIntent($paymentIntentId)
+    {
+        $intent = \Stripe\PaymentIntent::retrieve($paymentIntentId);
+        return $intent->cancel();
+    }
+
+    /**
+     * Verifies and decodes a Stripe webhook payload. Throws
+     * \UnexpectedValueException (malformed payload) or
+     * \Stripe\Error\SignatureVerification (bad/missing signature) — the
+     * caller (StripeWebhookController) is expected to catch both and
+     * respond with a 400 so Stripe's retry logic kicks in rather than
+     * silently accepting a payload we couldn't verify.
+     *
+     * @return \Stripe\Event
+     */
+    public static function constructWebhookEvent($payload, $sigHeader, $endpointSecret)
+    {
+        return \Stripe\Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+    }
 }

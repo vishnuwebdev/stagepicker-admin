@@ -116,6 +116,12 @@ Route::group(['middleware' => 'auth'] , function() {
     Route::any('admin/view-order/{id}', 'App\Http\Controllers\admin\OrderController@view')->name('admin/view_order');
     Route::post('admin/update-order-status/{id}', 'App\Http\Controllers\admin\OrderController@updateStatus')->name('admin/update_order_status');
 
+    //Payment Transactions (Stripe attempt history — read-only, refunds are
+    //handled directly in the Stripe dashboard, see PaymentTransactionController)
+    Route::get('admin/payment-transactions', 'App\Http\Controllers\admin\PaymentTransactionController@list')->name('admin/payment-transactions');
+    Route::get('admin/payment-transactions/user/{userId}', 'App\Http\Controllers\admin\PaymentTransactionController@userHistory')->name('admin/payment-transactions/user');
+    Route::get('admin/payment-transactions/{id}', 'App\Http\Controllers\admin\PaymentTransactionController@view')->name('admin/payment-transactions/view');
+
     //Route::get('admin/add-subscription', 'App\Http\Controllers\admin\SubscriptionController@add')->name('admin/add-subscription');
     //Route::post('admin/subscription/store', 'App\Http\Controllers\admin\SubscriptionController@store')->name('admin/subscription/store');
     //Route::any('admin/edit-subscription/{key}', 'App\Http\Controllers\admin\SubscriptionController@edit')->name('admin/edit-subscription');

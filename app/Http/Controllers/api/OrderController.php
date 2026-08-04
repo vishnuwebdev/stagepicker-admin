@@ -95,30 +95,17 @@ class OrderController extends ApiController
         }
 
         $paymentMethod = $request->payment_method;
-        $cardNumber = preg_replace('/\s+/', '', (string) $request->card_number);
 
-        // Mock approve/decline — mirrors MarketplaceCardInputData.simulatesDecline
-        // on the Flutter side (a card ending in 0002 declines) so the same
-        // test card reproduces the same result on both ends.
-        $declined = $paymentMethod === 'credit_card' && substr($cardNumber, -4) === '0002';
-
-        if ($declined) {
-            $response['status'] = "false";
-            $response['payment_status'] = "declined";
-            $response['message'] = "Payment declined — check your card details and try again.";
-            return response()->json($response);
-        }
-
-        $paymentSummary = 'Card';
-        if ($paymentMethod === 'apple_pay') {
-            $paymentSummary = 'Apple Pay';
-        } else if ($paymentMethod === 'google_pay') {
-            $paymentSummary = 'Google Pay';
-        } else {
-            $last4 = strlen($cardNumber) >= 4 ? substr($cardNumber, -4) : $cardNumber;
-            $paymentSummary = 'Card •••• ' . $last4;
-        }
-
+        // Payment is no longer mocked/decided here. The order is created in
+        // 'pending_payment' below; the Flutter app then calls
+        // create-payment-intent (payable_type=order, payable_id=this order)
+        // and confirms via Stripe's native PaymentSheet directly — no card
+        // data ever reaches this backend. api/PaymentController finalizes
+        // this order (payment_status/status) once Stripe reports success or
+        // failure, via sync-payment-status and/or the Stripe webhook. See
+        // PaymentController@cascadeToPayable. `payment_summary` (e.g. "Card
+        // •••• 4242") gets filled in there too, once Stripe tells us which
+        // payment method was actually used.
         $subtotal = 0;
         $preparedItems = [];
 
@@ -166,13 +153,16 @@ class OrderController extends ApiController
         try {
             $order = new Order();
             $order->user_id = $request->user_id;
-            $order->status = 'placed';
+            // Awaiting Stripe confirmation — see the comment above. Moved to
+            // 'placed'/'approved' or 'cancelled'/'declined' by
+            // PaymentController once the payment attempt resolves.
+            $order->status = 'pending_payment';
             $order->subtotal = $subtotal;
             $order->shipping_amount = $shippingAmount;
             $order->total = $total;
             $order->payment_method = $paymentMethod;
-            $order->payment_summary = $paymentSummary;
-            $order->payment_status = 'approved';
+            $order->payment_summary = null;
+            $order->payment_status = 'pending';
             $order->shipping_full_name = $request->shipping_full_name;
             $order->shipping_phone = $request->shipping_phone;
             $order->shipping_address_line1 = $request->shipping_address_line1;
@@ -205,9 +195,14 @@ class OrderController extends ApiController
             return response()->json($response);
         }
 
+        // "Order placed" here means the order + line items are recorded and
+        // ready for payment — not that payment succeeded. The Flutter app
+        // follows this response by calling create-payment-intent for this
+        // order's id and presenting Stripe's PaymentSheet; the order only
+        // becomes 'placed'/'approved' once that payment actually succeeds.
         $response['status'] = "true";
-        $response['payment_status'] = "approved";
-        $response['message'] = "Order placed successfully";
+        $response['payment_status'] = "pending";
+        $response['message'] = "Order created — awaiting payment";
         $response['data'] = $this->serializeOrder($order);
         return response()->json($response);
     }

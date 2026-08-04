@@ -41,6 +41,14 @@ class Kernel extends ConsoleKernel
         // For testing only
         $schedule->command('notifications:send-daily')
          ->everyMinute();
+
+        // Safety net for abandoned/interrupted Stripe payments — see
+        // ExpirePendingPaymentTransactions for why this exists. Runs
+        // frequently since it only acts on attempts already older than
+        // --minutes (default 45), so running every 10 minutes doesn't
+        // sweep anything prematurely.
+        $schedule->command('payments:expire-stale')
+         ->everyTenMinutes();
     }
 
     /**

@@ -123,6 +123,11 @@ return [
     'stripe_secret' => env('STRIPE_SECRET', ''),
     'stripe_publish_key' => env('STRIPE_PUBLISH', ''),
 	'stripe_client_id' => env('STRIPE_CLIENT_ID', ''),
+    // Signing secret for the /api/stripe-webhook endpoint (Stripe Dashboard
+    // > Developers > Webhooks > your endpoint > "Signing secret", starts
+    // with whsec_). See StripeWebhookController — requests are rejected
+    // outright if this is empty, so this must be set before webhooks work.
+    'stripe_webhook_secret' => env('STRIPE_WEBHOOK_SECRET', ''),
 
     'cipher' => 'AES-256-CBC',
 

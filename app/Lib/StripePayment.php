@@ -3,7 +3,12 @@ namespace App\Lib;
 
 use App\Models\User;
 //~ use App\Models\Orders;
-require_once('vendor/stripe/init.php');
+// Was a relative path ('vendor/stripe/init.php'), which only resolves if
+// PHP's working directory happens to be the project root at request time —
+// it doesn't on this server for api/ routes, causing a fatal "Failed
+// opening required" error. base_path() anchors this to Laravel's actual
+// app root regardless of the web server's CWD.
+require_once(base_path('vendor/stripe/init.php'));
 //email : deen@abstarctsoftweb.com
 //password : av;3WeMyPfC'^%ye
 //https://phppot.com/php/stripe-payment-gateway-integration-using-php/

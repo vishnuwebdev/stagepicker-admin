@@ -3,14 +3,33 @@
             <div class="layout-px-spacing">
                 <div class="row layout-top-spacing layout-spacing">
                     <div class="col-lg-12">
+                        @if ($message = Session::get('success'))
+                            <div class="alert alert-success mb-4" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </div>
+                        @endif
+                        @if ($message = Session::get('error'))
+                            <div class="alert alert-danger mb-4" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </div>
+                        @endif
+
                         <div class="statbox widget box box-shadow">
                             <div class="widget-header">
                                 <div class="row">
                                     <div class="col-xl-6 col-md-6 col-sm-6 col-6">
                                         <h4>Transaction #{{ $transaction->id }} (attempt #{{ $transaction->attempt_number }})</h4>
                                     </div>
-                                    <div class="col-xl-6 col-md-6 col-sm-6 col-6">
-                                        <h4 style="float: right !important;"><a href="{{ URL('admin/payment-transactions') }}" class="btn btn-primary">Back</a></h4>
+                                    <div class="col-xl-6 col-md-6 col-sm-6 col-6" style="text-align: right;">
+                                        @if (!$transaction->isTerminal() && $transaction->gateway_intent_id)
+                                        <form action="{{ url('admin/payment-transactions/'.$transaction->id.'/refresh') }}" method="post" style="display:inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning" title="Ask Stripe directly for this transaction's current status — useful while the automatic webhook isn't set up yet (see PaymentTransactionController doc comment).">
+                                                <i class="fa fa-refresh" aria-hidden="true"></i> Check Status Now
+                                            </button>
+                                        </form>
+                                        @endif
+                                        <a href="{{ URL('admin/payment-transactions') }}" class="btn btn-primary">Back</a>
                                     </div>
                                 </div>
                             </div>

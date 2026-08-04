@@ -120,6 +120,7 @@ Route::group(['middleware' => 'auth'] , function() {
     //handled directly in the Stripe dashboard, see PaymentTransactionController)
     Route::get('admin/payment-transactions', 'App\Http\Controllers\admin\PaymentTransactionController@list')->name('admin/payment-transactions');
     Route::get('admin/payment-transactions/user/{userId}', 'App\Http\Controllers\admin\PaymentTransactionController@userHistory')->name('admin/payment-transactions/user');
+    Route::post('admin/payment-transactions/{id}/refresh', 'App\Http\Controllers\admin\PaymentTransactionController@refreshStatus')->name('admin/payment-transactions/refresh');
     Route::get('admin/payment-transactions/{id}', 'App\Http\Controllers\admin\PaymentTransactionController@view')->name('admin/payment-transactions/view');
 
     //Route::get('admin/add-subscription', 'App\Http\Controllers\admin\SubscriptionController@add')->name('admin/add-subscription');

@@ -58,14 +58,18 @@ class PaymentTransaction extends Model
     }
 
     /**
-     * Resolves the linked domain row for this attempt (currently only
-     * `order` is a real payable_type). Kept as a plain lookup rather than a
-     * formal morphTo so payable_type strings stay simple and greppable.
+     * Resolves the linked domain row for this attempt (`order` and
+     * `booking` are the real payable_types today). Kept as a plain lookup
+     * rather than a formal morphTo so payable_type strings stay simple and
+     * greppable.
      */
     public function payable()
     {
         if ($this->payable_type === 'order' && $this->payable_id) {
             return Order::find($this->payable_id);
+        }
+        if ($this->payable_type === 'booking' && $this->payable_id) {
+            return Booking::find($this->payable_id);
         }
         return null;
     }

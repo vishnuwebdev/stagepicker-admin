@@ -92,6 +92,20 @@ Route::any('/deSelectParticipant', 'App\Http\Controllers\api\PostauditionControl
 Route::any('/deleteaudiotion', 'App\Http\Controllers\api\PostauditionController@deleteaudiotion')->name('deleteaudiotion');
 
 
+//audition invites ("Invite for Audition" — producer invites shortlisted
+//auditioners to a callback with a title/location/date/time; auditioner
+//accepts/declines).
+Route::any('/send-audition-invite', 'App\Http\Controllers\api\AuditionInviteController@sendAuditionInvite')->name('send-audition-invite');
+Route::any('/my-audition-invites', 'App\Http\Controllers\api\AuditionInviteController@myAuditionInvites')->name('my-audition-invites');
+Route::any('/respond-audition-invite', 'App\Http\Controllers\api\AuditionInviteController@respondAuditionInvite')->name('respond-audition-invite');
+Route::any('/producer-audition-invites', 'App\Http\Controllers\api\AuditionInviteController@producerAuditionInvites')->name('producer-audition-invites');
+Route::any('/producer-audition-invite-detail', 'App\Http\Controllers\api\AuditionInviteController@producerAuditionInviteDetail')->name('producer-audition-invite-detail');
+//unauthenticated cron sweep, mirrors the existing /run-notifications and
+//checkexpireaudition/notifybeforeexpire pattern — hit this periodically
+//(e.g. hourly) to flip stale pending invites to 'expired'. Not required
+//for correctness (reads compute this live) — just keeps stored data fresh.
+Route::get('/expire-audition-invites', 'App\Http\Controllers\api\AuditionInviteController@expireAuditionInvites')->name('expire-audition-invites');
+
 
 //photography audition
 
@@ -162,6 +176,13 @@ Route::any('/get-orders', 'App\Http\Controllers\api\OrderController@get_orders')
 Route::any('/get-order-detail', 'App\Http\Controllers\api\OrderController@get_order_detail')->name('get-order-detail');
 Route::any('/request-order-return', 'App\Http\Controllers\api\OrderController@request_order_return')->name('request-order-return');
 Route::any('/order-invoice', 'App\Http\Controllers\api\OrderController@order_invoice')->name('order-invoice');
+
+//class booking management (Enroll / My Bookings — reuses the same generic
+//Stripe payment gateway below via payable_type=booking). Webinars/seminars
+//not wired up yet — see WEBINAR_SEMINAR_BOOKING_PLAN.md.
+Route::any('/create-booking', 'App\Http\Controllers\api\BookingController@create_booking')->name('create-booking');
+Route::any('/get-bookings', 'App\Http\Controllers\api\BookingController@get_bookings')->name('get-bookings');
+Route::any('/get-booking-detail', 'App\Http\Controllers\api\BookingController@get_booking_detail')->name('get-booking-detail');
 
 //generic Stripe payment gateway (reusable across checkout flows — see
 //api/PaymentController.php). create/sync are called by the app,

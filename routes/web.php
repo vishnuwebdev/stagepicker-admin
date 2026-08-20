@@ -116,6 +116,13 @@ Route::group(['middleware' => 'auth'] , function() {
     Route::any('admin/view-order/{id}', 'App\Http\Controllers\admin\OrderController@view')->name('admin/view_order');
     Route::post('admin/update-order-status/{id}', 'App\Http\Controllers\admin\OrderController@updateStatus')->name('admin/update_order_status');
 
+    //Bookings Management (Class enrollment / attendee lists — cancelling
+    //here is bookkeeping only, refunds are handled in the Stripe dashboard)
+    Route::get('admin/bookings', 'App\Http\Controllers\admin\BookingController@list')->name('admin/bookings');
+    Route::get('admin/bookings/class/{classId}/attendees', 'App\Http\Controllers\admin\BookingController@attendees')->name('admin/bookings/attendees');
+    Route::post('admin/bookings/{id}/status', 'App\Http\Controllers\admin\BookingController@updateStatus')->name('admin/bookings/status');
+    Route::get('admin/bookings/{id}', 'App\Http\Controllers\admin\BookingController@view')->name('admin/bookings/view');
+
     //Payment Transactions (Stripe attempt history — read-only, refunds are
     //handled directly in the Stripe dashboard, see PaymentTransactionController)
     Route::get('admin/payment-transactions', 'App\Http\Controllers\admin\PaymentTransactionController@list')->name('admin/payment-transactions');

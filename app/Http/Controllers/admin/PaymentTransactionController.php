@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Lib\StripePayment;
+use App\Models\Booking;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentTransactionLog;
@@ -83,6 +84,7 @@ class PaymentTransactionController extends AdminController
         $data['transaction'] = $transaction;
         $data['user'] = User::find($transaction->user_id);
         $data['order'] = $transaction->payable_type === 'order' ? Order::find($transaction->payable_id) : null;
+        $data['booking'] = $transaction->payable_type === 'booking' ? Booking::find($transaction->payable_id) : null;
         $data['siblingAttempts'] = $siblingAttempts;
         $data['timeline'] = $transaction->logs;
         return \View::make('admin/payment_transactions/view', $data);

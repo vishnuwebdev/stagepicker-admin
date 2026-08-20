@@ -74,6 +74,39 @@
                         <span class="text-danger">{{ $errors->first('image') }}</span>
                          @endif
                         </div>
+                        <div class="form-group col-md-6">
+                        <label for="inputPassword4">Mode</label>
+                           <select name="mode" id="class-mode" class="form-control">
+                           <option value="">--Select Mode--</option>
+                            <option value="online" {{ (isset($category->mode) && $category->mode=='online')?'selected':''}}>Online (join link only)</option>
+                            <option value="offline" {{ (isset($category->mode) && $category->mode=='offline')?'selected':''}}>In-Person (address only)</option>
+                            <option value="both" {{ (isset($category->mode) && $category->mode=='both')?'selected':''}}>Both (user picks at booking)</option>
+                        </select>
+                        @if ($errors->has('mode'))
+                        <span class="text-danger">{{ $errors->first('mode') }}</span>
+                         @endif
+                        </div>
+                        <div class="form-group col-md-6">
+                        <label for="inputPassword4">Join Link <small class="text-muted">(required for Online / Both)</small></label>
+                        <input type="text" class="form-control" name="link" value="{{ $category->link }}" placeholder="https://... course link, shown only after purchase">
+                        @if ($errors->has('link'))
+                        <span class="text-danger">{{ $errors->first('link') }}</span>
+                         @endif
+                        </div>
+                        <div class="form-group col-md-6">
+                        <label for="inputPassword4">Address <small class="text-muted">(required for In-Person / Both)</small></label>
+                        <input type="text" class="form-control" name="location" value="{{ $category->location }}" placeholder="Studio address, shown only after purchase">
+                        @if ($errors->has('location'))
+                        <span class="text-danger">{{ $errors->first('location') }}</span>
+                         @endif
+                        </div>
+                        <div class="form-group col-md-6">
+                        <label for="inputPassword4">Max Seats <small class="text-muted">(blank = unlimited)</small></label>
+                        <input type="number" min="1" class="form-control" name="max_seats" value="{{ $category->max_seats }}" placeholder="e.g. 20">
+                        @if ($errors->has('max_seats'))
+                        <span class="text-danger">{{ $errors->first('max_seats') }}</span>
+                         @endif
+                        </div>
                         </div>
                         <div class="form-group">
                         <div class="form-group col-md-12">

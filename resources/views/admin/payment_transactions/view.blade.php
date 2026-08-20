@@ -79,6 +79,8 @@
                                         <td>
                                             @if ($order)
                                             Order {{ $order->order_code }} — <a href="{{ url('admin/view-order', $order->id) }}">view order</a>
+                                            @elseif ($booking)
+                                            Booking #{{ $booking->id }} ({{ $booking->title_snapshot }}) — <a href="{{ url('admin/bookings', $booking->id) }}">view booking</a>
                                             @else
                                             {{ $transaction->payable_type ? ucfirst($transaction->payable_type).' #'.$transaction->payable_id : 'Not linked to an order' }}
                                             @endif

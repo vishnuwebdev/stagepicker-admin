@@ -28,7 +28,11 @@
                                                 <th>Price</th>
                                                 <th>Duration</th>
                                                 <th>Duration Type</th>
+                                                <th>Mode</th>
+                                                <th>Link / Address</th>
+                                                <th>Max Seats</th>
                                                 <th>Status</th>
+                                                <th>Attendees</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -46,6 +50,13 @@
                                                 <td>
 												 {{ $categoryval->duration_type }}
 												</td>
+                                                <td>{{ ucfirst($categoryval->mode ?? 'online') }}</td>
+                                                <td>
+												 {{ $categoryval->link }}
+												 @if($categoryval->link && $categoryval->location)<br>@endif
+												 {{ $categoryval->location }}
+												</td>
+                                                <td>{{ $categoryval->max_seats ?: 'Unlimited' }}</td>
                                                 <td>
 												@if($categoryval->status == 1)
                                                 <a href="#" class="btn btn-sm btn-primary">Active</a>
@@ -53,7 +64,10 @@
                                                 <a href="#" class="btn btn-sm btn-danger">inactive</a>
                                                 @endif
 												</td>
-             
+                                                <td>
+                                                <a href="{{ url('admin/bookings/class/'.$categoryval->id.'/attendees') }}" class="btn btn-sm btn-primary">View Attendees</a>
+                                                </td>
+
                                             </tr>
                                               <?php } ?>
                                         </tbody>

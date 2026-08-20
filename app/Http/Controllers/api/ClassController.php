@@ -18,6 +18,7 @@ use App\Models\Compcard;
 use App\Models\ExtCasting;
 use App\Models\Auditionparticipant;
 use App\Models\Favourite;
+use App\Models\Booking;
 
 
 use App\Models\CompanyVerification;
@@ -120,10 +121,17 @@ class ClassController extends ApiController
             $class=DB::table('classes')->where('status',1)->orderBy('id','desc')->get();
 			foreach($class as $ks=>$vs)
 			{
-				
+
 				$class[$ks]->image=asset('public/admin/uploads/class/'.$vs->image);
+
+				// Post-purchase access info (link/location) is never sent
+				// on public catalog endpoints — only get_booking_detail
+				// returns it, and only for a confirmed booking. See
+				// WEBINAR_SEMINAR_BOOKING_PLAN.md "Post-purchase access".
+				unset($class[$ks]->link);
+				unset($class[$ks]->location);
 			}
-			
+
 			$webinars=DB::table('webinars')->where('status',1)->orderBy('id','desc')->get();
 		    $array['class']=$class;
 			foreach($webinars as $ks=>$vs)
@@ -168,14 +176,39 @@ class ClassController extends ApiController
         {
 			$array=array();
             $class=DB::table('classes')->where('status',1)->where('id',$request->class_id)->first();
-			
-				
+
+			if (!$class) {
+				$response['status'] = "false";
+				$response['message'] = "Class not found";
+				return response()->json($response);
+			}
+
 			$class->image=asset('public/admin/uploads/class/'.$class->image);
-			
+
+			// How many seats are still available, if this class has a
+			// max_seats cap — informational only, doesn't gate booking
+			// (create_booking re-checks capacity server-side at the time
+			// of booking, this is just for display before that).
+			if (!empty($class->max_seats)) {
+				$taken = Booking::where('bookable_type', 'class')
+					->where('bookable_id', $class->id)
+					->whereIn('status', [Booking::STATUS_PENDING_PAYMENT, Booking::STATUS_CONFIRMED])
+					->sum('quantity');
+				$class->seats_left = max(0, (int) $class->max_seats - (int) $taken);
+			} else {
+				$class->seats_left = null;
+			}
+
+			// Post-purchase access info is never sent here — only
+			// get_booking_detail, and only for a confirmed booking. See
+			// WEBINAR_SEMINAR_BOOKING_PLAN.md "Post-purchase access".
+			unset($class->link);
+			unset($class->location);
+
             $response['data'] = $class;
             $response['message'] ="Class Details";
             return response()->json($response);
-            
+
         }
     }
 	

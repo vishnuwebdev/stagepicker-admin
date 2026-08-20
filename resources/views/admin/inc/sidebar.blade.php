@@ -177,6 +177,15 @@
 						</div>
 					</a>
 				</li>
+				<li class="menu {{ Request::segment(2) === 'bookings' ? 'active' : null }}">
+					<a href="{{ url('admin/bookings') }}"  data-active="" aria-expanded="" class="dropdown-toggle">
+						<div class="">
+
+
+							 <span>- Bookings</span>
+						</div>
+					</a>
+				</li>
 				<li class="menu {{ Request::segment(2) === 'payment-transactions' ? 'active' : null }}">
 					<a href="{{ url('admin/payment-transactions') }}"  data-active="" aria-expanded="" class="dropdown-toggle">
 						<div class="">

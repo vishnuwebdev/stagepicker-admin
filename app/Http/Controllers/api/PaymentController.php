@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiController;
 use App\Lib\StripePayment;
+use App\Models\Booking;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentTransactionLog;
@@ -59,6 +60,20 @@ class PaymentController extends ApiController
             return [(float) $order->total, null];
         }
 
+        if ($request->payable_type === 'booking') {
+            $booking = Booking::where('id', $request->payable_id)
+                ->where('user_id', $request->user_id)
+                ->first();
+
+            if (!$booking) {
+                return [null, 'Booking not found for this user.'];
+            }
+            if ($booking->status !== Booking::STATUS_PENDING_PAYMENT) {
+                return [null, 'This booking is not awaiting payment.'];
+            }
+            return [(float) $booking->amount, null];
+        }
+
         // Generic / not tied to a domain row yet — trust the client amount
         // (used for future flows like subscriptions/contributions before
         // they get their own payable_type). Still validated as numeric >0
@@ -72,7 +87,7 @@ class PaymentController extends ApiController
             'user_id' => 'required',
             'amount' => 'nullable|numeric|min:0.5',
             'currency' => 'nullable|string|size:3',
-            'payable_type' => 'nullable|in:order,generic',
+            'payable_type' => 'nullable|in:order,booking,generic',
             'payable_id' => 'nullable|integer',
         ];
 
@@ -84,10 +99,10 @@ class PaymentController extends ApiController
         }
 
         $payableType = $request->payable_type ?: 'generic';
-        $payableId = $payableType === 'order' ? $request->payable_id : null;
+        $payableId = in_array($payableType, ['order', 'booking'], true) ? $request->payable_id : null;
 
-        if ($payableType === 'order' && !$payableId) {
-            return $this->fail('payable_id is required when payable_type is order.');
+        if (in_array($payableType, ['order', 'booking'], true) && !$payableId) {
+            return $this->fail('payable_id is required when payable_type is order or booking.');
         }
         if ($payableType === 'generic' && !$request->amount) {
             return $this->fail('amount is required.');
@@ -397,6 +412,11 @@ class PaymentController extends ApiController
      */
     private function cascadeToPayable(PaymentTransaction $transaction)
     {
+        if ($transaction->payable_type === 'booking') {
+            $this->cascadeToBooking($transaction);
+            return;
+        }
+
         if ($transaction->payable_type !== 'order' || !$transaction->payable_id) {
             return;
         }
@@ -431,6 +451,40 @@ class PaymentController extends ApiController
                 $order->payment_status = $transaction->status === 'failed' ? 'declined' : 'cancelled';
                 $order->status = 'cancelled';
                 $order->save();
+            }
+        }
+    }
+
+    /**
+     * Booking equivalent of the order branch above — same shape (confirm
+     * on success, cancel on failed/canceled, only touch a booking still
+     * waiting on this exact payment). A cancelled booking frees its seat
+     * immediately, since create_booking's capacity check only counts
+     * pending_payment + confirmed bookings — the user retries by calling
+     * create_booking again (a new row), same as how a failed order isn't
+     * resumed, a new one is placed.
+     */
+    private function cascadeToBooking(PaymentTransaction $transaction)
+    {
+        if (!$transaction->payable_id) {
+            return;
+        }
+
+        $booking = Booking::find($transaction->payable_id);
+        if (!$booking) {
+            return;
+        }
+
+        if ($transaction->status === PaymentTransaction::STATUS_SUCCEEDED) {
+            if ($booking->status === Booking::STATUS_PENDING_PAYMENT) {
+                $booking->status = Booking::STATUS_CONFIRMED;
+                $booking->save();
+            }
+        } elseif (in_array($transaction->status, [PaymentTransaction::STATUS_FAILED, PaymentTransaction::STATUS_CANCELED], true)) {
+            if ($booking->status === Booking::STATUS_PENDING_PAYMENT) {
+                $booking->status = Booking::STATUS_CANCELLED;
+                $booking->cancelled_at = now();
+                $booking->save();
             }
         }
     }

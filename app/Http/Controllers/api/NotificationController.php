@@ -16,14 +16,19 @@ class NotificationController extends Controller
      */
     public function index($user_id)
     {
-        // Fetch notifications by user_id, newest first
-        // $notifications = Notification::where('user_id', $user_id)
-        //     ->orderBy('created_at', 'desc')
-        //     ->get();
+        // Fetch notifications by user_id, newest first.
+        //
+        // This used to additionally require custom_data.id to match a row
+        // in post_auditions — which silently hid every notification whose
+        // custom_data.id refers to something else (e.g. audition_invite_*
+        // notifications store an audition_invites.id here, not a
+        // post_auditions.id), stripping them out of this list even though
+        // they were correctly written to the table. There is no evidence
+        // that filter was ever meant to apply to every notification type —
+        // it was already commented out as the "real" query below it, in
+        // the same commit that introduced the join. Restoring it so every
+        // notification type shows up.
         $notifications = Notification::where('user_id', $user_id)
-            ->whereIn(DB::raw("CAST(JSON_UNQUOTE(JSON_EXTRACT(custom_data, '$.id')) AS UNSIGNED)"), function ($query) {
-                $query->select('id')->from('post_auditions');
-            })
             ->orderBy('created_at', 'desc')
             ->get();
         return response()->json([

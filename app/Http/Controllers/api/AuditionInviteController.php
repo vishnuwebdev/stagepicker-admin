@@ -8,6 +8,7 @@ use App\Models\AuditionInviteParticipant;
 use App\Services\FCMService;
 use Carbon\Carbon;
 use DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -45,19 +46,46 @@ class AuditionInviteController extends Controller
     function sendUserNotification($data)
     {
         if (empty($data['fcmToken'])) {
+            Log::warning('AuditionInviteController::sendUserNotification skipped — no device_token on file', [
+                'title' => $data['title'] ?? null,
+                'customData' => $data['customData'] ?? null,
+            ]);
             return;
         }
         try {
             $fcmService = new FCMService();
-            $fcmService->sendNotification(
+            $result = $fcmService->sendNotification(
                 $data['fcmToken'],
                 $data['title'],
                 $data['message'],
                 $data['customData'] ?? []
             );
-        } catch (\Exception $e) {
+            // FCMService::sendNotification() already logs the failure
+            // detail itself; this just makes it easy to grep the invite
+            // flow specifically and confirms pushes that DID succeed too.
+            if (empty($result['success'])) {
+                Log::error('AuditionInviteController: push notification failed', [
+                    'title' => $data['title'] ?? null,
+                    'customData' => $data['customData'] ?? null,
+                    'error' => $result['error'] ?? 'unknown',
+                ]);
+            } else {
+                Log::info('AuditionInviteController: push notification sent', [
+                    'title' => $data['title'] ?? null,
+                    'customData' => $data['customData'] ?? null,
+                ]);
+            }
+        } catch (\Throwable $e) {
             // Never let a push failure break the API response — mirrors
-            // the forgiving pattern used elsewhere for FCM sends.
+            // the forgiving pattern used elsewhere for FCM sends. Was
+            // `catch (\Exception $e)`, which would not have caught a
+            // \TypeError/\Error escaping FCMService — now logged either
+            // way instead of silently vanishing or fataling the request.
+            Log::error('AuditionInviteController: push notification threw', [
+                'title' => $data['title'] ?? null,
+                'customData' => $data['customData'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 

@@ -17,7 +17,15 @@ class FCMService
     protected $tokenUri;
     protected $client;
 
-   
+    /**
+     * False when storage/app/service-account.json is missing or unreadable
+     * JSON. Previously this class would silently limp along with a null
+     * $serviceAccount/$tokenUri in that case — every send would eventually
+     * fail deep inside generateAccessToken() with no log line anywhere
+     * explaining why. sendNotification() now checks this up front and
+     * fails loudly (logged) instead.
+     */
+    protected $configured = false;
 
 
     public function __construct()
@@ -25,13 +33,26 @@ class FCMService
       //  $this->fcmUrl = 'https://fcm.googleapis.com/v1/projects/stage-picker/messages:send';
         $this->serverKey = 'AAAAYCe7MYI:APA91bG2BCIUbYLUUeEBmnvmP0gEyKaGwdejDUJC7PZGVQjjywyRwaB__vRSLEBNzD3-rfaODr9a3CeWs_9DVVjH4esvL-0M5xuvab7sS-KrLm--13tXWpXHSoz-IODsZkFxbQT5WpAb';
 
-         $path = storage_path( 'app/service-account.json');
+        $path = storage_path('app/service-account.json');
 
-        $this->serviceAccount = json_decode(file_get_contents($path), true);
+        if (!is_file($path) || !is_readable($path)) {
+            Log::error('FCMService: service-account.json is missing (or unreadable) at ' . $path . ' — every push notification will fail until it is placed there.');
+            $this->client = new Client();
+            return;
+        }
+
+        $decoded = json_decode(file_get_contents($path), true);
+        if (!is_array($decoded) || empty($decoded['token_uri']) || empty($decoded['private_key']) || empty($decoded['client_email'])) {
+            Log::error('FCMService: service-account.json at ' . $path . ' is present but not valid Firebase service-account JSON (missing token_uri/private_key/client_email) — every push notification will fail.');
+            $this->client = new Client();
+            return;
+        }
+
+        $this->serviceAccount = $decoded;
         $this->projectId = 'stage-picker';
-        $this->tokenUri = $this->serviceAccount['token_uri'];
+        $this->tokenUri = $decoded['token_uri'];
         $this->client = new Client();
-        
+        $this->configured = true;
     }
 
     /**
@@ -118,7 +139,17 @@ dd($response->status(), $response->body());
 
     public function sendNotification($fcmToken, $title, $body, $data = [])
     {
-         try {
+        if (!$this->configured) {
+            // Constructor already logged exactly why (missing file vs
+            // invalid JSON) — no need to repeat it on every call, but the
+            // caller still needs a clean failure result rather than a
+            // fatal error from calling generateAccessToken() on nulls.
+            return [
+                'success' => false,
+                'error' => 'FCMService not configured — see FCMService constructor log for details.',
+            ];
+        }
+        try {
             $accessToken = $this->generateAccessToken();
 
             $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
@@ -167,13 +198,24 @@ dd($response->status(), $response->body());
 
             $result = json_decode($response->getBody(), true);
 
-        
             return [
                 'success' => true,
                 'response' => $result,
             ];
-        } catch (\Exception $e) {
-          // dump($e->getMessage());
+        } catch (\Throwable $e) {
+            // Was `catch (\Exception $e)`, which does NOT catch \Error /
+            // \TypeError — e.g. JWT::encode() throwing a TypeError when
+            // $this->serviceAccount['private_key'] is null used to escape
+            // this catch entirely and become an uncaught fatal error deep
+            // inside whatever API request triggered a push. Catching
+            // \Throwable and logging here means a bad/expired key, a
+            // revoked device token, or an FCM outage now shows up in
+            // storage/logs/laravel.log instead of just... nothing.
+            Log::error('FCMService::sendNotification failed', [
+                'fcmToken' => $fcmToken,
+                'title' => $title,
+                'error' => $e->getMessage(),
+            ]);
             return [
                 'success' => false,
                 'error' => $e->getMessage(),

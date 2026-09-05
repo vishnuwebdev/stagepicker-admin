@@ -107,6 +107,37 @@ Route::any('/producer-audition-invite-detail', 'App\Http\Controllers\api\Auditio
 Route::get('/expire-audition-invites', 'App\Http\Controllers\api\AuditionInviteController@expireAuditionInvites')->name('expire-audition-invites');
 
 
+// Animal Audition feature — producer posts a casting call describing the
+// animal they need, auditioner applies with one or more of their own
+// reusable animal profiles, producer shortlists (chat still uses the
+// existing Firestore createGroup flow client-side, unchanged here).
+Route::any('/animal-audition-form-data', 'App\Http\Controllers\api\AnimalAuditionController@formData')->name('animal-audition-form-data');
+
+Route::any('/add-animal-audition', 'App\Http\Controllers\api\AnimalAuditionController@addAnimalAudition')->name('add-animal-audition');
+Route::any('/update-animal-audition', 'App\Http\Controllers\api\AnimalAuditionController@updateAnimalAudition')->name('update-animal-audition');
+Route::any('/animal-audition-list', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionList')->name('animal-audition-list');
+Route::any('/animal-audition-detail', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionDetail')->name('animal-audition-detail');
+Route::any('/animal-audition-feed', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionFeed')->name('animal-audition-feed');
+
+Route::any('/animal-audition-apply', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionApply')->name('animal-audition-apply');
+Route::any('/animal-audition-applied-list', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionAppliedList')->name('animal-audition-applied-list');
+
+Route::any('/animal-audition-applicants', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionApplicants')->name('animal-audition-applicants');
+Route::any('/animal-audition-select-applicant', 'App\Http\Controllers\api\AnimalAuditionController@selectAnimalAuditionApplicant')->name('animal-audition-select-applicant');
+Route::any('/animal-audition-deselect-applicant', 'App\Http\Controllers\api\AnimalAuditionController@deselectAnimalAuditionApplicant')->name('animal-audition-deselect-applicant');
+
+Route::any('/animal-profile-add', 'App\Http\Controllers\api\AnimalAuditionController@addAnimalProfile')->name('animal-profile-add');
+Route::any('/animal-profile-update', 'App\Http\Controllers\api\AnimalAuditionController@updateAnimalProfile')->name('animal-profile-update');
+Route::any('/animal-profile-delete', 'App\Http\Controllers\api\AnimalAuditionController@deleteAnimalProfile')->name('animal-profile-delete');
+Route::any('/animal-profile-list', 'App\Http\Controllers\api\AnimalAuditionController@animalProfileList')->name('animal-profile-list');
+
+// unauthenticated cron sweep, mirrors /expire-audition-invites — flips
+// stale active posts to inactive once expire_date has passed. Not
+// required for correctness (reads compute this live) — just keeps stored
+// data fresh.
+Route::get('/expire-animal-auditions', 'App\Http\Controllers\api\AnimalAuditionController@expireAnimalAuditions')->name('expire-animal-auditions');
+
+
 //photography audition
 
 Route::any('/photographylist', 'App\Http\Controllers\api\PostauditionController@photographylist')->name('photographylist');

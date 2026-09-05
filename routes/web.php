@@ -166,6 +166,27 @@ Route::group(['middleware' => 'auth'] , function() {
     Route::any('admin/edit-crewrole/{key}', 'App\Http\Controllers\admin\CrewRoleController@edit')->name('admin/edit-crewrole');
     Route::any('admin/update-crewrole/{key}', 'App\Http\Controllers\admin\CrewRoleController@update')->name('admin/update-crewrole');
     Route::any('admin/crewrole-delete/{id}', 'App\Http\Controllers\admin\CrewRoleController@delete')->name('admin/crewrole-delete');
+
+    // Admin Animal Audition feature — species/breed master data + post
+    // list/detail/status (view + moderate only, no create/edit/delete of
+    // posts on a producer's behalf). Permission module p10.
+    Route::get('admin/animal-species', 'App\Http\Controllers\admin\AnimalSpeciesController@list')->name('admin/animal-species');
+    Route::get('admin/animal-species/add', 'App\Http\Controllers\admin\AnimalSpeciesController@add')->name('admin/animal-species-add');
+    Route::post('admin/animal-species/store', 'App\Http\Controllers\admin\AnimalSpeciesController@store')->name('admin/animal-species-store');
+    Route::any('admin/animal-species/edit/{id}', 'App\Http\Controllers\admin\AnimalSpeciesController@edit')->name('admin/animal-species-edit');
+    Route::any('admin/animal-species/update/{id}', 'App\Http\Controllers\admin\AnimalSpeciesController@update')->name('admin/animal-species-update');
+    Route::any('admin/animal-species/delete/{id}', 'App\Http\Controllers\admin\AnimalSpeciesController@delete')->name('admin/animal-species-delete');
+
+    Route::get('admin/animal-breed', 'App\Http\Controllers\admin\AnimalBreedController@list')->name('admin/animal-breed');
+    Route::get('admin/animal-breed/add', 'App\Http\Controllers\admin\AnimalBreedController@add')->name('admin/animal-breed-add');
+    Route::post('admin/animal-breed/store', 'App\Http\Controllers\admin\AnimalBreedController@store')->name('admin/animal-breed-store');
+    Route::any('admin/animal-breed/edit/{id}', 'App\Http\Controllers\admin\AnimalBreedController@edit')->name('admin/animal-breed-edit');
+    Route::any('admin/animal-breed/update/{id}', 'App\Http\Controllers\admin\AnimalBreedController@update')->name('admin/animal-breed-update');
+    Route::any('admin/animal-breed/delete/{id}', 'App\Http\Controllers\admin\AnimalBreedController@delete')->name('admin/animal-breed-delete');
+
+    Route::get('admin/animal-audition', 'App\Http\Controllers\admin\AnimalAuditionController@list')->name('admin/animal-audition');
+    Route::any('admin/animal-audition-detail/{id}', 'App\Http\Controllers\admin\AnimalAuditionController@detail')->name('admin/animal-audition-detail');
+    Route::post('admin/update-animal-audition-status', 'App\Http\Controllers\admin\AnimalAuditionController@updateStatus')->name('admin/update-animal-audition-status');
 	
     
     // Admin  Photography Management

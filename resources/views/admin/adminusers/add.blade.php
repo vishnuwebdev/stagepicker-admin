@@ -179,6 +179,15 @@
                         			<td style="text-align: center;"><input type="checkbox" name="permission[8][edit]" value="1"></td>
                         			<td style="text-align: center;"><input type="checkbox" name="permission[8][delete]" value="1"></td>
                         		</tr>
+                        			<tr>
+                        			<td>Animal Audition Management</td>
+                        			<input type="hidden" name="permission[9][module]" value="Animal Audition Management">
+                        			<input type="hidden" name="permission[9][moduleId]" value="p10">
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[9][view]" value="1"></td>
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[9][add]" value="1"></td>
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[9][edit]" value="1"></td>
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[9][delete]" value="1"></td>
+                        		</tr>
                         		
                         	</table>
                         </div>

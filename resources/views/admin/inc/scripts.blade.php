@@ -134,6 +134,30 @@
 				}
 			});  
 		});
+
+		//update animal audition status
+		$(document).on("click",".updateanimalauditionstatus", function() {
+			if($(this).is(':checked')){
+				var status = 1;
+			}else{
+				var status = 0;
+			}
+
+			var Id = $(this).attr('data-id');
+			var urldata = '{{url("admin/update-animal-audition-status")}}';
+			$.ajax({
+				headers: {
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+				},
+				type: 'POST',
+				dataType: "json",
+				url: urldata,
+				data: {'status': status,'Id': Id},
+				success: function(result){
+					  location.reload(1);
+				}
+			});
+		});
 		
 		//update audition crew status
 		$(document).on("click",".updatecrewstatus", function() {

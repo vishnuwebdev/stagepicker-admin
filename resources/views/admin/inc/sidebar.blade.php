@@ -275,7 +275,36 @@
 						</li>
 					</ul>
 				</li>
-                      
+
+                  <?php } else if($per->moduleId == 'p10' && $per->view)  { ?>
+
+                  					<li><a class='menu animal-audition-drop-part' href='#' title='Menu'><i class="sicon fa fa-paw"></i> Animal Audition <i class="fa fa-angle-down" aria-hidden="true"></i>
+</a>
+					<ul class='menus animal-audition-show-part'>
+						<li class="menu {{ Request::segment(2) === 'animal-audition' ? 'active' : null }}">
+							<a href="{{ url('admin/animal-audition') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+								<div class="">
+									 <span>- Audition Posts</span>
+								</div>
+							</a>
+						</li>
+						<li class="menu {{ Request::segment(2) === 'animal-species' ? 'active' : null }}">
+							<a href="{{ url('admin/animal-species') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+								<div class="">
+									 <span>- Species Management</span>
+								</div>
+							</a>
+						</li>
+						<li class="menu {{ Request::segment(2) === 'animal-breed' ? 'active' : null }}">
+							<a href="{{ url('admin/animal-breed') }}" data-active="" aria-expanded="" class="dropdown-toggle">
+								<div class="">
+									 <span>- Breed Management</span>
+								</div>
+							</a>
+						</li>
+					</ul>
+				</li>
+
                   <?php 
 
                         } 

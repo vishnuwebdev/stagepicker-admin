@@ -121,6 +121,30 @@
                         		</tr>
 
                               <?php } ?>
+                              <?php
+                                // Existing admin users won't have a p10 (Animal Audition
+                                // Management) entry in their stored permissions JSON yet —
+                                // this form only renders rows already present above, so
+                                // without this the module could never be granted through
+                                // the edit screen. Render one extra, unchecked-by-default
+                                // row for it here, keyed past the last existing index.
+                                $hasAnimalAuditionModule = false;
+                                foreach ($permission as $per) {
+                                    if ($per->moduleId == 'p10') { $hasAnimalAuditionModule = true; break; }
+                                }
+                                $nextKey = count($permission);
+                              ?>
+                              <?php if (!$hasAnimalAuditionModule) { ?>
+                                  <tr>
+                        			<td>Animal Audition Management</td>
+                        			<input type="hidden" name="permission[<?=$nextKey?>][module]" value="Animal Audition Management">
+                        			<input type="hidden" name="permission[<?=$nextKey?>][moduleId]" value="p10">
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[<?=$nextKey?>][view]" value="1"></td>
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[<?=$nextKey?>][add]" value="1"></td>
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[<?=$nextKey?>][edit]" value="1"></td>
+                        			<td style="text-align: center;"><input type="checkbox" name="permission[<?=$nextKey?>][delete]" value="1"></td>
+                        		</tr>
+                              <?php } ?>
 
                         	
                         		

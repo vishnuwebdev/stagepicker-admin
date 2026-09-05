@@ -180,8 +180,11 @@ class CreateAnimalAuditionsTables extends Migration
                 $table->unsignedBigInteger('animal_profile_id');
                 $table->timestamps();
 
-                $table->index('animal_audition_application_id');
-                $table->index('animal_profile_id');
+                // MySQL's default auto-generated index name for this
+                // table+column combo (75 chars) exceeds the 64-char
+                // identifier limit, so these are explicitly named short.
+                $table->index('animal_audition_application_id', 'aaap_application_id_idx');
+                $table->index('animal_profile_id', 'aaap_profile_id_idx');
                 $table->unique(
                     ['animal_audition_application_id', 'animal_profile_id'],
                     'aaap_application_profile_unique'

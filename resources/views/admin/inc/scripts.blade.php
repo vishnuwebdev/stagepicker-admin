@@ -266,6 +266,9 @@ jQuery(".store-drop-part").click(function(){
 jQuery(".announcemet-drop-part").click(function(){
   jQuery(".announcemet-show-part").toggle("slow");
 });
+jQuery(".animal-audition-drop-part").click(function(){
+  jQuery(".animal-audition-show-part").toggle("slow");
+});
 
 // Gallery image hover
 $(".img-wrapper").hover(

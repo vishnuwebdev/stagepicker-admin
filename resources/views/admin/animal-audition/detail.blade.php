@@ -35,7 +35,7 @@
 						<div class="row">
 							<?php foreach ($photos as $photo) { ?>
 								<div class="col-md-2 mb-3">
-									<img src="{{ asset(str_replace('public/', '', $photo->image)) }}" class="img-fluid" style="border-radius:4px;">
+									<img src="{{ asset($photo->image) }}" class="img-fluid" style="border-radius:4px;">
 								</div>
 							<?php } ?>
 							<?php if ($photos->isEmpty()) { ?><p class="text-muted">No photos.</p><?php } ?>

@@ -17,7 +17,34 @@
 				<?php
                    $userPermission = Auth::User();
 
-				    $permissionMenu = json_decode($userPermission->permissions);
+				    // The root/superadmin account (id 1) is excluded from the Admin
+				    // Users screen, so its stored `permissions` JSON has no UI path to
+				    // pick up modules added after the account was created (e.g. Animal
+				    // Audition Management, p10) — it silently falls behind instead of
+				    // erroring. Build a full, always-current module list for it here
+				    // rather than trusting that stored JSON. New modules added to the
+				    // if/else chain below should be added to this list too.
+				    if ($userPermission->id == 1) {
+				        $rootModules = [
+				            ['module' => 'User Management', 'moduleId' => 'p1'],
+				            ['module' => 'Admin User Management', 'moduleId' => 'p2'],
+				            ['module' => 'Audition Control', 'moduleId' => 'p3'],
+				            ['module' => 'Production Crew', 'moduleId' => 'p4'],
+				            ['module' => 'Producer Verification', 'moduleId' => 'p5'],
+				            ['module' => 'Store', 'moduleId' => 'p6'],
+				            ['module' => 'Category Management', 'moduleId' => 'p7'],
+				            ['module' => 'App Setting', 'moduleId' => 'p8'],
+				            ['module' => 'Announcement & Reports', 'moduleId' => 'p9'],
+				            ['module' => 'Animal Audition Management', 'moduleId' => 'p10'],
+				        ];
+				        $permissionMenu = array_map(function ($m) {
+				            return (object) array_merge($m, [
+				                'view' => 1, 'add' => 1, 'edit' => 1, 'delete' => 1,
+				            ]);
+				        }, $rootModules);
+				    } else {
+				        $permissionMenu = json_decode($userPermission->permissions);
+				    }
 
 
 				    foreach($permissionMenu as $key => $per) { 

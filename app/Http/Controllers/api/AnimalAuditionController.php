@@ -390,8 +390,10 @@ class AnimalAuditionController extends Controller
             if ($application) {
                 $application->profiles = DB::table('animal_audition_application_profiles as aap')
                     ->join('animal_profiles as ap', 'ap.id', '=', 'aap.animal_profile_id')
+                    ->leftJoin('animal_species as sp', 'sp.id', '=', 'ap.animal_species_id')
+                    ->leftJoin('animal_breeds as br', 'br.id', '=', 'ap.animal_breed_id')
                     ->where('aap.animal_audition_application_id', $application->id)
-                    ->select('ap.*')
+                    ->select('ap.*', 'sp.name as species_name', 'br.name as breed_name')
                     ->get();
                 foreach ($application->profiles as $p) {
                     $p->photos = DB::table('animal_profile_photos')->where('animal_profile_id', $p->id)->pluck('image');
@@ -528,9 +530,14 @@ class AnimalAuditionController extends Controller
         foreach ($rows as $row) {
             $row->profiles = DB::table('animal_audition_application_profiles as aap')
                 ->join('animal_profiles as ap', 'ap.id', '=', 'aap.animal_profile_id')
+                ->leftJoin('animal_species as sp', 'sp.id', '=', 'ap.animal_species_id')
+                ->leftJoin('animal_breeds as br', 'br.id', '=', 'ap.animal_breed_id')
                 ->where('aap.animal_audition_application_id', $row->id)
-                ->select('ap.*')
+                ->select('ap.*', 'sp.name as species_name', 'br.name as breed_name')
                 ->get();
+            foreach ($row->profiles as $p) {
+                $p->photos = DB::table('animal_profile_photos')->where('animal_profile_id', $p->id)->pluck('image');
+            }
         }
 
         if ($filterStatus === 'shortlisted') {

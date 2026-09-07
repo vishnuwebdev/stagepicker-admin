@@ -307,7 +307,7 @@
 
                   					<li><a class='menu animal-audition-drop-part' href='#' title='Menu'><i class="sicon fa fa-paw"></i> Animal Audition <i class="fa fa-angle-down" aria-hidden="true"></i>
 </a>
-					<ul class='menus animal-audition-show-part'>
+					<ul class='menus animal-audition-show-part' style="display: none;">
 						<li class="menu {{ Request::segment(2) === 'animal-audition' ? 'active' : null }}">
 							<a href="{{ url('admin/animal-audition') }}" data-active="" aria-expanded="" class="dropdown-toggle">
 								<div class="">

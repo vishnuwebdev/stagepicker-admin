@@ -1416,6 +1416,9 @@ a.menu {
 .announcemet-show-part{
     display:none;
 }
+.animal-audition-show-part{
+    display:none;
+}
 a.menu.audition-drop-part img {
     width: 20px;
     height: 25px;

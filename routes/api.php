@@ -115,6 +115,7 @@ Route::any('/animal-audition-form-data', 'App\Http\Controllers\api\AnimalAuditio
 
 Route::any('/add-animal-audition', 'App\Http\Controllers\api\AnimalAuditionController@addAnimalAudition')->name('add-animal-audition');
 Route::any('/update-animal-audition', 'App\Http\Controllers\api\AnimalAuditionController@updateAnimalAudition')->name('update-animal-audition');
+Route::any('/delete-animal-audition', 'App\Http\Controllers\api\AnimalAuditionController@deleteAnimalAudition')->name('delete-animal-audition');
 Route::any('/animal-audition-list', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionList')->name('animal-audition-list');
 Route::any('/animal-audition-detail', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionDetail')->name('animal-audition-detail');
 Route::any('/animal-audition-feed', 'App\Http\Controllers\api\AnimalAuditionController@animalAuditionFeed')->name('animal-audition-feed');

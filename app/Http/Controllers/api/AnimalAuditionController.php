@@ -317,6 +317,53 @@ class AnimalAuditionController extends Controller
     }
 
     /**
+     * Permanently remove one producer-owned animal audition post and all
+     * feature-owned records that reference it. These tables intentionally do
+     * not have foreign-key cascades (see the feature migration), so delete the
+     * application-profile joins before their applications, then the post's
+     * photos and the post itself.
+     */
+    public function deleteAnimalAudition(Request $request)
+    {
+        $rules = [
+            'id' => 'required|exists:animal_auditions,id',
+            'user_id' => 'required|exists:users,id',
+            'device_type' => 'required|string',
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['status' => "false", 'message' => $this->validationHandle($validator->messages())]);
+        }
+
+        $audition = AnimalAudition::find($request->id);
+        if (!$audition || (string) $audition->user_id !== (string) $request->user_id) {
+            return response()->json(['status' => "false", 'message' => "You do not own this post"]);
+        }
+
+        DB::transaction(function () use ($audition) {
+            $applicationIds = DB::table('animal_audition_applications')
+                ->where('animal_audition_id', $audition->id)
+                ->pluck('id');
+
+            if ($applicationIds->isNotEmpty()) {
+                DB::table('animal_audition_application_profiles')
+                    ->whereIn('animal_audition_application_id', $applicationIds)
+                    ->delete();
+            }
+
+            DB::table('animal_audition_applications')
+                ->where('animal_audition_id', $audition->id)
+                ->delete();
+            DB::table('animal_audition_photos')
+                ->where('animal_audition_id', $audition->id)
+                ->delete();
+            $audition->delete();
+        });
+
+        return response()->json(['status' => "true", 'message' => "Animal audition post deleted successfully"]);
+    }
+
+    /**
      * Producer's own posts, home-tab list. status: all | active | inactive | expired.
      */
     public function animalAuditionList(Request $request)

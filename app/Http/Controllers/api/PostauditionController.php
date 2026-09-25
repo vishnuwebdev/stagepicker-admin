@@ -77,7 +77,8 @@ class PostauditionController extends ApiController
 			'user_id' => $request['user_id'],
 			'title' => $request['title'],
 			'body' => $request['message'],
-			'type' => 'message',
+			// Callers pass 'notification_type'; accept 'type' too, else default.
+			'type' => $request['notification_type'] ?? $request['type'] ?? 'message',
 			// Callers pass 'reference_id'; accept both so ref_id is saved.
 			'ref_id' => isset($request['ref_id']) ? (string) $request['ref_id'] : (isset($request['reference_id']) ? (string) $request['reference_id'] : null),
 			'is_read' => $request['is_read'] ?? false,

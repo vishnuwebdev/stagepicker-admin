@@ -709,7 +709,7 @@ class PostauditionController extends ApiController
 						->where("user_id", $data['user_id'])
 						->first();
 
-					$is_fav = !empty($fav) ? 1 :  '0';
+					$is_fav = !empty($fav) ? '1' : '0';
 					$time_ago = $this->timeago($safePostAudition->created_at, true);
 
 					$postauditiondata[] = array(

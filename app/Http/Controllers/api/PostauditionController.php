@@ -78,9 +78,13 @@ class PostauditionController extends ApiController
 			'title' => $request['title'],
 			'body' => $request['message'],
 			'type' => 'message',
-			'ref_id' => $request['ref_id'] ?? null,
+			// Callers pass 'reference_id'; accept both so ref_id is saved.
+			'ref_id' => isset($request['ref_id']) ? (string) $request['ref_id'] : (isset($request['reference_id']) ? (string) $request['reference_id'] : null),
 			'is_read' => $request['is_read'] ?? false,
 			'custom_data' => $request['custom_data'] ?? null,
+			// DB::table()->insert() doesn't fill timestamps like Eloquent does.
+			'created_at' => now(),
+			'updated_at' => now(),
 		];
 
 

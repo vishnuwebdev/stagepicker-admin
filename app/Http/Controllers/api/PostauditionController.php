@@ -77,10 +77,15 @@ class PostauditionController extends ApiController
 			'user_id' => $request['user_id'],
 			'title' => $request['title'],
 			'body' => $request['message'],
-			'type' => 'message',
-			'ref_id' => $request['ref_id'] ?? null,
+			// Callers pass 'notification_type'; accept 'type' too, else default.
+			'type' => $request['notification_type'] ?? $request['type'] ?? 'message',
+			// Callers pass 'reference_id'; accept both so ref_id is saved.
+			'ref_id' => isset($request['ref_id']) ? (string) $request['ref_id'] : (isset($request['reference_id']) ? (string) $request['reference_id'] : null),
 			'is_read' => $request['is_read'] ?? false,
 			'custom_data' => $request['custom_data'] ?? null,
+			// DB::table()->insert() doesn't fill timestamps like Eloquent does.
+			'created_at' => now(),
+			'updated_at' => now(),
 		];
 
 
@@ -727,7 +732,7 @@ class PostauditionController extends ApiController
 						->where("user_id", $data['user_id'])
 						->first();
 
-					$is_fav = !empty($fav) ? 1 :  '0';
+					$is_fav = !empty($fav) ? '1' : '0';
 					$time_ago = $this->timeago($safePostAudition->created_at, true);
 
 					$postauditiondata[] = array(

@@ -559,6 +559,18 @@ class PostauditionController extends ApiController
 				->where("post_auditions.id", $data['audition_id'])
 				->first();
 
+			// Fallback: external castings (audition_type 3) are created without a
+			// category (category = 0), so the categories join above drops them and
+			// shared links to them could not be opened. Look them up without the join.
+			if (empty($postaudition)) {
+				$postaudition = DB::table('post_auditions')
+					->select('post_auditions.*', DB::raw('NULL as category_name'))
+					->where('post_auditions.user_id', $data['user_id'])
+					->where("post_auditions.id", $data['audition_id'])
+					->where('post_auditions.audition_type', '3')
+					->first();
+			}
+
 			$postauditiondata = null;
 
 			if (!empty($postaudition)) {
@@ -661,6 +673,17 @@ class PostauditionController extends ApiController
 				->where('post_auditions.status', '1')
 				->where('post_auditions.id', $data['audition_id'])
 				->first();
+			// Fallback: external castings (audition_type 3) are created without a
+			// category (category = 0), so the categories join above drops them and
+			// shared links to them could not be opened. Look them up without the join.
+			if (empty($postaudition)) {
+				$postaudition = DB::table('post_auditions')
+					->select('post_auditions.*', DB::raw('NULL as category_name'))
+					->where('post_auditions.status', '1')
+					->where('post_auditions.id', $data['audition_id'])
+					->where('post_auditions.audition_type', '3')
+					->first();
+			}
 			$postauditiondata =	null;
 			if (!empty($postaudition)) {
 				
